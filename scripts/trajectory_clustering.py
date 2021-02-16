@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 np.random.seed()
 
@@ -17,14 +18,41 @@ class Trajectories:
     def getTrajectory(self, id):
         return self.trajectories[id]
 
+    def createTrajectoryFromCsv(self, dir):
+        with open(dir) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter = ',')
+            line_count = 0
+            t = []
+            for row in csv_reader:
+                if line_count == 0:
+                    print(f'Column names are {", ".join(row)}')
+                else:
+                    #print(f'x = {row[3]}, y = {row[3]}, z = {row[5]}')
+                    t.append([float(row[3]), float(row[4]), float(row[5])])
+                line_count += 1
+            self.addTrajectory(t)
+            print(f'Processed {line_count} lines.')
+
     def printTrajectories(self):
         for trajectory in self.trajectories:
             print(trajectory)
 
     def showTrajectories(self):
         import matplotlib.pyplot as plt
-        for trajectory in self.trajectories:
-            plt.plot(trajectory[:, 0], trajectory[:, 1]) #x, y
+        tr = np.asarray(self.trajectories)
+        size = tr.shape[2]
+        # 2D visualisation
+        if size == 2:
+            for trajectory in self.trajectories:
+                plt.plot(trajectory[:, 0], trajectory[:, 1]) #x, y
+        # 3D visualisation
+        elif size == 3:
+            from mpl_toolkits.mplot3d import Axes3D
+            fig = plt.figure()
+            ax = fig.gca(projection='3d')
+            for trajectory in self.trajectories:
+                ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
+
         plt.xlabel("x")
         plt.ylabel("y")
         plt.show()
@@ -82,7 +110,7 @@ t1 = [[0, 4], [1, 5], [2, 6], [3, 7], [4, 8], [5, 9], [6, 10], [7, 11], [8, 12],
 similar_trajectories.addTrajectory(t0)
 similar_trajectories.addTrajectory(t1)
 
-similar_trajectories.distanceBetweenTwoTrajectories(0, 1, verbose=True)
+#similar_trajectories.distanceBetweenTwoTrajectories(0, 1, verbose=True)
 similar_trajectories.showTrajectories()
 
 print() # \n
@@ -94,7 +122,11 @@ nb_trajectories = 10
 for i in range(nb_trajectories - 1):
     random_trajectories.addRandomTrajectory()
 
-distances = random_trajectories.getTrajectoriesDistances(verbose=True)
-print(distances)
+#distances = random_trajectories.getTrajectoriesDistances(verbose=True)
+#print(distances)
 #random_trajectories.printTrajectories()
-random_trajectories.showTrajectories()
+#random_trajectories.showTrajectories()
+
+csv_traj = Trajectories()
+csv_traj.createTrajectoryFromCsv("datapoints/participant7trial2-ontask-100.csv")
+csv_traj.showTrajectories()
