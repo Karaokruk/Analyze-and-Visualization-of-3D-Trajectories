@@ -20,12 +20,29 @@ class Trajectories:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
             t = []
+            x = y = z = -1
             for row in csv_reader:
                 if line_count == 0:
                     print(f'Column names are {", ".join(row)}')
+                    # Automatic version
+                    for i in range(len(row)):
+                        if row[i] == "CameraPosition.x":
+                            x = i
+                        elif row[i] == "CameraPosition.y":
+                            y = i
+                        elif row[i] == "CameraPosition.z":
+                            z = i
+                    print(f'before : x = {x}, y = {y}, z = {z}')
+                    # If the col isn't found
+                    if x == -1:
+                        x = int(input("Camera position X not found. Enter the row (index - 1) : "))
+                    if y == -1:
+                        y = int(input("Camera position Y not found. Enter the row (index - 1) : "))
+                    if z == -1:
+                        z = int(input("Camera position Z not found. Enter the row (index - 1) : "))
+                    print(f'after : x = {x}, y = {y}, z = {z}')
                 else:
-                    #print(f'x = {row[3]}, y = {row[3]}, z = {row[5]}')
-                    t.append([float(row[3]), float(row[4]), float(row[5])])
+                    t.append([float(row[x]), float(row[y]), float(row[z])])
                 line_count += 1
             self.addTrajectory(t)
             print(f'Processed {line_count} lines.')
