@@ -15,10 +15,7 @@ class Trajectories:
     def addRandomTrajectory(self, maxValue=10, nbPoints=10, nbCoordinates=2):
         self.trajectories.append(maxValue * np.random.random((nbPoints, nbCoordinates)))
 
-    def getTrajectory(self, id):
-        return self.trajectories[id]
-
-    def createTrajectoryFromCsv(self, dir):
+    def addTrajectoryFromCsv(self, dir):
         with open(dir) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
@@ -32,6 +29,9 @@ class Trajectories:
                 line_count += 1
             self.addTrajectory(t)
             print(f'Processed {line_count} lines.')
+    
+    def getTrajectory(self, id):
+        return self.trajectories[id]
 
     def printTrajectories(self):
         for trajectory in self.trajectories:
@@ -128,5 +128,5 @@ for i in range(nb_trajectories - 1):
 #random_trajectories.showTrajectories()
 
 csv_traj = Trajectories()
-csv_traj.createTrajectoryFromCsv("datapoints/participant7trial2-ontask-100.csv")
+csv_traj.addTrajectoryFromCsv("datapoints/participant7trial2-ontask-100.csv")
 csv_traj.showTrajectories()
