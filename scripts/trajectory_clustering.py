@@ -82,18 +82,19 @@ class Trajectories:
         #     self.trajectories[i] = minimizedTrajectory1(self.trajectories[i],0.98,limit)
 
         def minimizedTrajectory1(trajectory, ratio,limit):
+            tmpTraj = trajectory
             i = 0
             cpt = 0
-            while i < len(trajectory)-2 and len(trajectory) > limit:
-                if pointDistance(trajectory[i],trajectory[i+2]) >= ratio*(pointDistance(trajectory[i],trajectory[i+1])+pointDistance(trajectory[i+1],trajectory[i+2])):
-                    trajectory = np.delete(trajectory,i+1,0)
+            while i < len(tmpTraj)-2 and len(tmpTraj) > limit:
+                if pointDistance(tmpTraj[i],tmpTraj[i+2]) >= ratio*(pointDistance(tmpTraj[i],tmpTraj[i+1])+pointDistance(tmpTraj[i+1],tmpTraj[i+2])):
+                    tmpTraj = np.delete(tmpTraj,i+1,0)
                     cpt+=1
                 i+=1
-            if cpt == 0 and len(trajectory) > limit:
-                limit = len(trajectory)
-            print(str(cpt)+" points have been removed")
-            print(str(len(trajectory))+" points remaining")
-            return trajectory,limit,cpt
+            if cpt == 0 and len(tmpTraj) > limit:
+                limit = len(tmpTraj)
+            print(f"{cpt} points have been removed")
+            print(f"{len(trajectory)} points remaining")
+            return tmpTraj,limit,cpt
 
         removed = -1
         while removed != 0:
