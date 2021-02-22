@@ -6,6 +6,19 @@ np.random.seed()
 def pointDistance(p1, p2):
     return np.sqrt(np.sum(np.square(p1 - p2)))
 
+def trajDistance(t1, t2, translation=False, verbose=False):
+    size = min(t1.shape[0], t2.shape[0])
+
+    origin_difference = ((t1[0][0] - t2[0][0]), (t1[0][1] - t2[0][1])) if (translation) else 0
+
+    distance = 0
+    for i in range(size):
+        distance += pointDistance(t1[i], origin_difference + t2[i]) ** 2
+    distance = np.sqrt(distance / size)
+    if (verbose):
+        print(f"Distance between trajectories : {distance}")
+    return distance
+
 class Trajectories:
 
     def __init__(self):
@@ -15,7 +28,7 @@ class Trajectories:
         self.trajectories.append(np.array(trajectory))
 
     def addRandomTrajectory(self, maxValue=10, nbPoints=10, nbCoordinates=2):
-        self.trajectories.append(maxValue * np.random.random((nbPoints, nbCoordinates)))
+        self.trajectories.append(maxValue * np.random.rand(nbPoints, nbCoordinates))
 
     def addTrajectoryFromCsv(self, file):
         with open(file) as csv_file:
@@ -223,4 +236,4 @@ def createCSVTrajectories(file):
 
 #createSimilarTrajectories(minimize=True)
 #createRandomTrajectories(nb_trajectories=2, minimize=True)
-createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
+#createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
