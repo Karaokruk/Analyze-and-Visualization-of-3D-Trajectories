@@ -3,6 +3,9 @@ import csv
 
 np.random.seed()
 
+def pointDistance(p1, p2):
+    return np.sqrt(np.sum(np.square(p1 - p2)))
+
 class Trajectories:
 
     def __init__(self):
@@ -51,9 +54,9 @@ class Trajectories:
         return self.trajectories[id]
 
     # Make all trajectories the same length
-    def attuneTrajectories(self):
+    def attuneTrajectories(self,ratio,limit):
 
-        def minimizedTrajectory(trajectory):
+        def minimizedTrajectory0(trajectory):
             minimized = []
 
             # init last_point & last_direction
@@ -75,8 +78,35 @@ class Trajectories:
                 last_point = point
             minimized.append(trajectory[len(trajectory) - 1])
             return np.array(minimized)
-        for i in range(len(self.trajectories)):
-            self.trajectories[i] = minimizedTrajectory(self.trajectories[i])
+        # for i in range(len(self.trajectories)):
+        #     self.trajectories[i] = minimizedTrajectory1(self.trajectories[i],0.98,limit)
+
+        def minimizedTrajectory1(trajectory, ratio,limit):
+            i = 0
+            cpt = 0
+            while i < len(trajectory)-2 and len(trajectory) > limit:
+                if pointDistance(trajectory[i],trajectory[i+2]) >= ratio*(pointDistance(trajectory[i],trajectory[i+1])+pointDistance(trajectory[i+1],trajectory[i+2])):
+                    trajectory = np.delete(trajectory,i+1,0)
+                    cpt+=1
+                i+=1
+            if cpt == 0 and len(trajectory) > limit:
+                limit = len(trajectory)
+            print(str(cpt)+" points have been removed")
+            print(str(len(trajectory))+" points remaining")
+            return trajectory,limit,cpt
+
+        removed = -1
+        while removed != 0:
+            removed = 0
+            tmpTrajectories = []
+            for i in range(len(self.trajectories)):
+                tmp,limit,cpt = minimizedTrajectory1(self.trajectories[i],ratio,limit)
+                tmpTrajectories.append(tmp)
+                removed+=cpt
+            for i in range(len(self.trajectories)):
+                if len(tmpTrajectories[i]) < limit:
+                    tmpTrajectories[i] = self.trajectories[i]
+            self.trajectories = tmpTrajectories
 
     def printTrajectories(self):
         print("-- Trajectories --")
@@ -117,12 +147,9 @@ class Trajectories:
 
         origin_difference = ((t1[0][0] - t2[0][0]), (t1[0][1] - t2[0][1])) if (translation) else 0
 
-        def distanceBetweenTwoPoints(p1, p2):
-            return np.sqrt(np.sum(np.square(p1 - p2)))
-
         distance = 0
         for i in range(size):
-            distance += distanceBetweenTwoPoints(t1[i], origin_difference + t2[i]) ** 2
+            distance += pointDistance(t1[i], origin_difference + t2[i]) ** 2
         distance = np.sqrt(distance / size)
         if (verbose):
             print(f"Distance between trajectory {index1} & {index2} : {distance}")
@@ -161,11 +188,11 @@ def createSimilarTrajectories(minimize=False):
     t1 = [[0, 4], [1, 5], [2, 6], [3, 7], [4, 8], [5, 9], [6, 10], [7, 11], [8, 12], [9, 13]]
     similar_trajectories.addTrajectory(t0)
     similar_trajectories.addTrajectory(t1)
-    similar_trajectories.attuneTrajectories()
+    similar_trajectories.attuneTrajectories(8,0.8)
 
     similar_trajectories.completeDisplay()
     if (minimize):
-        similar_trajectories.attuneTrajectories()
+        similar_trajectories.attuneTrajectories(8,0.8)
         similar_trajectories.completeDisplay()
     return similar_trajectories
 
@@ -180,7 +207,7 @@ def createRandomTrajectories(nb_trajectories=10, minimize=False):
 
     random_trajectories.completeDisplay()
     if (minimize):
-        random_trajectories.attuneTrajectories()
+        random_trajectories.attuneTrajectories(5,0.8)
         random_trajectories.completeDisplay()
     return random_trajectories
 
@@ -190,8 +217,10 @@ def createCSVTrajectories(file):
 
     csv_trajectories.addTrajectoryFromCsv(file)
     csv_trajectories.showTrajectories()
+    csv_trajectories.attuneTrajectories(0.99,0)
+    csv_trajectories.showTrajectories()
     return csv_trajectories
 
 #createSimilarTrajectories(minimize=True)
 #createRandomTrajectories(nb_trajectories=2, minimize=True)
-createCSVTrajectories("../datapoints/participant7trial2-ontask-100.csv")
+createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
