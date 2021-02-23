@@ -1,6 +1,5 @@
 from trajectory_clustering import Trajectories
 from trajectory_clustering import createRandomTrajectories
-from trajectory_clustering import trajDistance
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +17,7 @@ def assignment(kmeans, traj):
     for t in traj.trajectories:
         y_hat = []
         for k in kmeans:
-            y_hat.append(trajDistance(t, k, True))
+            y_hat.append(Trajectories.trajectoryDistance(traj, t, k))
         assign.append(np.argmin(y_hat))
 
     return assign

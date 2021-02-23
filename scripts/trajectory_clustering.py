@@ -3,22 +3,6 @@ import csv
 
 np.random.seed()
 
-def pointDistance(p1, p2):
-    return np.sqrt(np.sum(np.square(p1 - p2)))
-
-def trajDistance(t1, t2, translation=False, verbose=False):
-    size = min(t1.shape[0], t2.shape[0])
-
-    origin_difference = ((t1[0][0] - t2[0][0]), (t1[0][1] - t2[0][1])) if (translation) else 0
-
-    distance = 0
-    for i in range(size):
-        distance += pointDistance(t1[i], origin_difference + t2[i]) ** 2
-    distance = np.sqrt(distance / size)
-    if (verbose):
-        print(f"Distance between trajectories : {distance}")
-    return distance
-
 class Trajectories:
 
     def __init__(self):
@@ -99,7 +83,7 @@ class Trajectories:
             i = 0
             cpt = 0
             while i < len(tmpTraj)-2 and len(tmpTraj) > limit:
-                if pointDistance(tmpTraj[i],tmpTraj[i+2]) >= ratio*(pointDistance(tmpTraj[i],tmpTraj[i+1])+pointDistance(tmpTraj[i+1],tmpTraj[i+2])):
+                if self.pointDistance(tmpTraj[i],tmpTraj[i+2]) >= ratio*(self.pointDistance(tmpTraj[i],tmpTraj[i+1])+self.pointDistance(tmpTraj[i+1],tmpTraj[i+2])):
                     tmpTraj = np.delete(tmpTraj,i+1,0)
                     cpt+=1
                 i+=1
@@ -152,32 +136,43 @@ class Trajectories:
         self.showTrajectories()
 
     ## Different heuristics to compute distance between two trajectories
+    # Distance between the points p1 and p2
+    def pointDistance(self, p1, p2):
+        return np.sqrt(np.sum(np.square(p1 - p2)))
 
     # Means the squares of the distance between points of the same the same index in the two trajectories
-    def heuristic0(self, index1, index2, translation=False, verbose=False):
-        t1 = self.getTrajectory(index1)
-        t2 = self.getTrajectory(index2)
+    def heuristic0(self, t1, t2, translation=False, verbose=False):
+        #t1 = self.getTrajectory(index1)
+        #t2 = self.getTrajectory(index2)
         size = min(t1.shape[0], t2.shape[0])
 
         origin_difference = ((t1[0][0] - t2[0][0]), (t1[0][1] - t2[0][1])) if (translation) else 0
 
         distance = 0
         for i in range(size):
-            distance += pointDistance(t1[i], origin_difference + t2[i]) ** 2
+            distance += self.pointDistance(t1[i], origin_difference + t2[i]) ** 2
         distance = np.sqrt(distance / size)
         if (verbose):
-            print(f"Distance between trajectory {index1} & {index2} : {distance}")
+            print(f"Distance between trajectories : {distance}")
         return distance
 
     # Adds a translation to heuristic0 by pasting the 2nd trajectory origin onto the 1st
-    def heuristic1(self, index1, index2, verbose=False):
-        return self.heuristic0(index1, index2, translation=True, verbose=verbose)
+    def heuristic1(self, t1, t2, verbose=False):
+        return self.heuristic0(t1, t2, translation=True, verbose=verbose)
 
-    def distanceBetweenTwoTrajectories(self, index1, index2, heuristic=1, verbose=False):
+    # Distance between two trajectories of the same class using indexes
+    def indexedTrajectoriesDistance(self, index1, index2, heuristic=1, verbose=False):
+        t1 = self.getTrajectory(index1)
+        t2 = self.getTrajectory(index2)
+        return self.trajectoryDistance(self, t1, t2, heuristic=1, verbose=False)
+    
+    # Distance between two trajectories.
+    @staticmethod
+    def trajectoryDistance(self, t1, t2, heuristic=1, verbose=False):
         if (heuristic == 0):
-            return self.heuristic0(index1, index2, verbose=verbose)
+            return self.heuristic0(t1, t2, verbose=verbose)
         if (heuristic == 1):
-            return self.heuristic1(index1, index2, verbose=verbose)
+            return self.heuristic1(t1, t2, verbose=verbose)
 
     def getTrajectoriesDistances(self, verbose=False):
         if (verbose):
@@ -187,7 +182,7 @@ class Trajectories:
         for i in range(nb_trajectories - 1):
             i_distances = []
             for j in range(i + 1, nb_trajectories):
-                i_distances.append(self.distanceBetweenTwoTrajectories(i, j, verbose=verbose))
+                i_distances.append(self.indexedTrajectoriesDistance(i, j, verbose=verbose))
             distances.append(i_distances)
         return distances
 
