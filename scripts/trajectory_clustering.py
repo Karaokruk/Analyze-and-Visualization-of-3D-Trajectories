@@ -135,7 +135,7 @@ class Trajectories:
                 for trajectory in self.trajectories:
                     ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
         if clusters is not None:
-            
+
             print(colors)
             print(clusters)
             for i in range(len(self.trajectories)):
@@ -181,7 +181,7 @@ class Trajectories:
         t1 = self.getTrajectory(index1)
         t2 = self.getTrajectory(index2)
         return self.trajectoryDistance(self, t1, t2, heuristic=1, verbose=False)
-    
+
     # Distance between two trajectories.
     @staticmethod
     def trajectoryDistance(self, t1, t2, heuristic=1, verbose=False):
@@ -222,13 +222,13 @@ def createSimilarTrajectories(minimize=False):
     return similar_trajectories
 
 # Create nb_trajectories random trajectories
-def createRandomTrajectories(nb_trajectories=10, minimize=False):
+def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
     random_trajectories = Trajectories()
 
-    t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
-    random_trajectories.addTrajectory(t0)
+    #t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
+    #random_trajectories.addTrajectory(t0)
     for i in range(nb_trajectories - 1):
-        random_trajectories.addRandomTrajectory()
+        random_trajectories.addRandomTrajectory(nbPoints=nb_points)
 
     random_trajectories.completeDisplay()
     if (minimize):

@@ -25,36 +25,36 @@ def assignment(kmeans, traj):
         assign.append(np.argmin(y_hat))
     return assign
 
-# Update each k-mean trajectories depending on 
+# Update each k-mean trajectories depending on
 def update(kmeans, traj, assign):
     sums = np.zeros_like(kmeans.trajectories)
     cpts = np.zeros(len(sums))
 
     for i in range(len(assign)):
         sums[assign[i]] += traj.trajectories[i]
-        cpts[assign[i]] +=1
+        cpts[assign[i]] += 1
     for i in range(len(sums)):
         sums[i] /= cpts[i]
-    print(kmeans.trajectories - sums)
+        print(f"Cluster #{i} difference : {kmeans.trajectories[i] - sums[i]}")
     kmeans.trajectories = sums
+    return kmeans
 
-def kmean(k, traj, nb_iter = 10):
+def kmean(k, traj, nb_iter=10):
     print("\n-- K-MEAN CLUSTERING --\n")
     print("Initializing kmeans...")
     m = initializationFromTrajectories(k, traj)
     translatedTraj = Trajectories()
     for t in traj.trajectories:
-        translatedTraj.addTrajectory(t-t[0])
+        translatedTraj.addTrajectory(t - t[0])
     #translatedTraj.completeDisplay()
-    print("Done.\n")
+    print("Initialization done.\n")
     for _ in range(nb_iter):
         a = assignment(m, translatedTraj)
         print(a)
         #traj.showTrajectories(a)
-        update(m, translatedTraj, a)
+        m = update(m, translatedTraj, a)
         m.showTrajectories()
 
 
-
-traj = createRandomTrajectories(nb_trajectories=30)
-kmean(4, traj)
+traj = createRandomTrajectories(nb_trajectories=100, nb_points=200)
+kmean(5, traj, nb_iter=20)
