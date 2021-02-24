@@ -1,5 +1,6 @@
 from trajectory_clustering import Trajectories
 from trajectory_clustering import createRandomTrajectories
+from trajectory_clustering import createCSVTrajectories
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,5 +57,6 @@ def kmean(k, traj, nb_iter=10):
         m.showTrajectories()
 
 
-traj = createRandomTrajectories(nb_trajectories=100, nb_points=200)
-kmean(5, traj, nb_iter=20)
+#traj = createRandomTrajectories(nb_trajectories=100, nb_points=200)
+traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
+kmean(2, traj, nb_iter=20)
