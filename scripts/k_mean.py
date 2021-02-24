@@ -35,7 +35,10 @@ def update(kmeans, traj, assign):
         sums[assign[i]] += traj.trajectories[i]
         cpts[assign[i]] += 1
     for i in range(len(sums)):
-        sums[i] /= cpts[i]
+        if cpts[i] != 0:
+            sums[i] /= cpts[i]
+        else:
+            sums[i] = kmeans.trajectories[i]
     kmeans.trajectories = sums
     return kmeans
 
@@ -43,7 +46,7 @@ def update(kmeans, traj, assign):
 def kmean(k, traj, nb_iter = 10, translation = True):
     print("\n-- K-MEAN CLUSTERING --\n")
     print("Initializing kmeans...")
-    m = initializationFromTrajectories(k, traj)
+    
     translatedTraj = Trajectories()
     for t in traj.trajectories:
 
@@ -53,11 +56,11 @@ def kmean(k, traj, nb_iter = 10, translation = True):
         workingTraj = translatedTraj
     else:
         workingTraj = traj
+    m = initializationFromTrajectories(k, workingTraj)
     print("Done.\n")
     for _ in range(nb_iter):
         a = assignment(m, workingTraj)
         update(m, workingTraj, a)
 
-#traj = createRandomTrajectories(nb_trajectories=100, nb_points=200)
 traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
 kmean(2, traj, nb_iter=20)
