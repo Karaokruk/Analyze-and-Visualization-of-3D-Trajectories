@@ -49,7 +49,6 @@ def kmean(k, traj, nb_iter = 10, translation = True):
     
     translatedTraj = Trajectories()
     for t in traj.trajectories:
-
         translatedTraj.addTrajectory(t-t[0])
     workingTraj = None
     if translation:

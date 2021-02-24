@@ -104,22 +104,63 @@ class Trajectories:
                 i+=1
             if cpt == 0 and len(tmpTraj) > limit:
                 limit = len(tmpTraj)
-            print(f"{cpt} points have been removed")
-            print(f"{len(trajectory)} points remaining")
+                print(f"-------- limit is now {limit}")
+            # print(f"{cpt} points have been removed")
+            # print(f"{len(trajectory)} points remaining")
             return tmpTraj,limit,cpt
 
+        # removed = -1
+        # minimized = self.trajectories.copy()
+        # while removed != 0:
+        #     print(f"----------------------new cycle with limit {limit}")
+        #     removed = 0
+        #     tmpTrajectories = []
+        #     for i in range(len(self.trajectories)):
+        #         print(i)
+        #         tmp,limit,cpt = minimizedTrajectory1(minimized[i],ratio,limit)
+        #         tmpTrajectories.append(tmp)
+        #         removed+=cpt
+        #     for i in range(len(self.trajectories)):
+        #         if len(tmpTrajectories[i]) < limit:
+        #             if len(self.trajectories[i]) < limit:
+        #                 print(len(self.trajectories[i]))
+        #                 print(limit)
+        #                 print("unable to attune trajectories because of ratio too high or limit wrongly placed")
+        #                 quit()
+        #             tmpTrajectories[i] = self.trajectories[i]
+        #             print(f"trial {i} had too less points")
+        #             removed = -1
+        #     minimized = tmpTrajectories
+        #     print(f"end of cycle, limit is {limit}")
+        
+
+        def findTrajectoryToIter(trajectories,limit):
+            id = 0
+            size = len(trajectories[0])
+            for i in range(len(trajectories)):
+                if (len(trajectories[i]) > size and len(trajectories[i]) != limit) or size == limit:
+                    size = len(trajectories[i])
+                    id = i
+            return id, size
+
         removed = -1
-        while removed != 0:
-            removed = 0
-            tmpTrajectories = []
-            for i in range(len(self.trajectories)):
-                tmp,limit,cpt = minimizedTrajectory1(self.trajectories[i],ratio,limit)
-                tmpTrajectories.append(tmp)
-                removed+=cpt
-            for i in range(len(self.trajectories)):
-                if len(tmpTrajectories[i]) < limit:
-                    tmpTrajectories[i] = self.trajectories[i]
-            self.trajectories = tmpTrajectories
+        toMinimize = self.trajectories.copy()
+        while True:
+            id, size = findTrajectoryToIter(toMinimize,limit)
+            if size == limit:
+                break
+            toMinimize[id], limit, removed = minimizedTrajectory1(toMinimize[id],ratio,limit)
+            if removed == 0:
+                if len(toMinimize[id]) < limit:
+                    if len(self.trajectories[id]) < limit:
+                        print("unable to attune trajectories because of ratio too high or limit wrongly placed")
+                        quit()
+                    print(f"resetting trajectory {id} because length {len(toMinimize[id])} lower than limit {limit}")
+                    toMinimize[id] = self.trajectories[id].copy()
+        self.trajectories = toMinimize
+
+
+
 
     def printTrajectories(self):
         print("-- Trajectories --")
@@ -261,10 +302,10 @@ def createCSVTrajectories(file):
     csv_trajectories.addTrajectoriesFromCsv(file)
     #csv_trajectories.printTrajectories()
     csv_trajectories.showTrajectories()
-    csv_trajectories.attuneTrajectories(0.99, 700)
+    csv_trajectories.attuneTrajectories(0.98, 0)
     csv_trajectories.showTrajectories()
     return csv_trajectories
 
 #createSimilarTrajectories(minimize=True)
 #createRandomTrajectories(nb_trajectories=2, minimize=True)
-#createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
+createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
