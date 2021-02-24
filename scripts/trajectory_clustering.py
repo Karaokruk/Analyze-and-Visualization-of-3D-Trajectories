@@ -111,20 +111,36 @@ class Trajectories:
         for i in range(len(self.trajectories)):
             print(f"Trajectory #{i} :\n{self.trajectories[i]}")
 
-    def showTrajectories(self):
+    def showTrajectories(self, clusters = None):
         import matplotlib.pyplot as plt
         nb_dimensions = self.trajectories[0].shape[1]
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
         # 2D visualization
         if nb_dimensions == 2:
-            for trajectory in self.trajectories:
-                plt.plot(trajectory[:, 0], trajectory[:, 1]) #x, y
+            if clusters is not None:
+                for i in range(len(self.trajectories)):
+                    plt.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
+            else:
+                for trajectory in self.trajectories:
+                    plt.plot(trajectory[:, 0], trajectory[:, 1]) #x, y
         # 3D visualization
         elif nb_dimensions == 3:
             from mpl_toolkits.mplot3d import Axes3D
             fig = plt.figure()
             ax = fig.gca(projection="3d")
-            for trajectory in self.trajectories:
-                ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
+            if clusters is not None:
+                for i in range(len(self.trajectories)):
+                    ax.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
+                for trajectory in self.trajectories:
+                    ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
+        if clusters is not None:
+            
+            print(colors)
+            print(clusters)
+            for i in range(len(self.trajectories)):
+                print(f"plotting line {i} with color {colors[clusters[i]]}")
+                 #x, y
 
         plt.xlabel("x")
         plt.ylabel("y")
