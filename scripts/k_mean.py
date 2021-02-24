@@ -35,23 +35,25 @@ def update(kmeans, traj, assign):
         cpts[assign[i]] +=1
     for i in range(len(sums)):
         sums[i] /= cpts[i]
-    print(kmeans.trajectories - sums)
+
     kmeans.trajectories = sums
 
-def kmean(k, traj, nb_iter = 10):
+def kmean(k, traj, nb_iter = 10, translation = True):
     print("\n-- K-MEAN CLUSTERING --\n")
     print("Initializing kmeans...")
     m = initializationFromTrajectories(k, traj)
     translatedTraj = Trajectories()
     for t in traj.trajectories:
         translatedTraj.addTrajectory(t-t[0])
-    #translatedTraj.completeDisplay()
+    workingTraj = None
+    if translation:
+        workingTraj = translatedTraj
+    else:
+        workingTraj = traj
     print("Done.\n")
     for _ in range(nb_iter):
-        a = assignment(m, translatedTraj)
-        print(a)
-        #traj.showTrajectories(a)
-        update(m, translatedTraj, a)
+        a = assignment(m, workingTraj)
+        update(m, workingTraj, a)
         m.showTrajectories()
 
 
