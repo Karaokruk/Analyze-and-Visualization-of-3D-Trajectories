@@ -14,12 +14,13 @@ class Trajectories:
     def addRandomTrajectory(self, maxValue=10, nbPoints=10, nbCoordinates=2):
         self.trajectories.append(maxValue * np.random.rand(nbPoints, nbCoordinates))
 
-    def addTrajectoryFromCsv(self, file):
+    def addTrajectoriesFromCsv(self, file):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
             t = []
-            x = y = z = -1
+            x = y = z = state_id = trial_id = -1
+            prev_trial_id = -1
             for row in csv_reader:
                 if line_count == 0:
                     print(f"Column names are {', '.join(row)}")
@@ -31,19 +32,33 @@ class Trajectories:
                             y = i
                         elif row[i] == "CameraPosition.z":
                             z = i
+                        elif row[i] == "TrialState":
+                            state_id = i
+                        elif row[i] == "TrialID":
+                            trial_id = i
                     print(f"before : x = {x}, y = {y}, z = {z}")
                     # If the col isn't found
                     if x == -1:
-                        x = int(input("Camera position X not found. Enter the row (index - 1) : "))
+                        x = int(input("Camera position X index not found. Enter the column (index - 1) : "))
                     if y == -1:
-                        y = int(input("Camera position Y not found. Enter the row (index - 1) : "))
+                        y = int(input("Camera position Y index not found. Enter the column (index - 1) : "))
                     if z == -1:
-                        z = int(input("Camera position Z not found. Enter the row (index - 1) : "))
-                    print(f"after : x = {x}, y = {y}, z = {z}")
+                        z = int(input("Camera position Z index not found. Enter the column (index - 1) : "))
+                    if state_id == -1:
+                        state_id = int(input("Trial state index not found. Enter the column (index - 1) : "))
+                    if trial_id == -1:
+                        trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
+                    print(f"after : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id}")
                 else:
-                    t.append([float(row[x]), float(row[y]), float(row[z])])
+                    if row[trial_id] != prev_trial_id and t != [] and prev_trial_id != -1:
+                        self.addTrajectory(t)
+                        t = []
+                    if row[state_id] == "OnTask":
+                        prev_trial_id = row[trial_id]
+                        t.append([float(row[x]), float(row[y]), float(row[z])])
                 line_count += 1
-            self.addTrajectory(t)
+            if t != []:
+                self.addTrajectory(t)
             print(f"Processed {line_count} lines.")
 
 
@@ -132,10 +147,11 @@ class Trajectories:
             if clusters is not None:
                 for i in range(len(self.trajectories)):
                     ax.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
+            else:
                 for trajectory in self.trajectories:
                     ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
         if clusters is not None:
-            
+
             print(colors)
             print(clusters)
             for i in range(len(self.trajectories)):
@@ -158,15 +174,17 @@ class Trajectories:
 
     # Means the squares of the distance between points of the same the same index in the two trajectories
     def heuristic0(self, t1, t2, translation=False, verbose=False):
-        #t1 = self.getTrajectory(index1)
-        #t2 = self.getTrajectory(index2)
         size = min(t1.shape[0], t2.shape[0])
 
-        origin_difference = ((t1[0][0] - t2[0][0]), (t1[0][1] - t2[0][1])) if (translation) else 0
+        deltat2 = None
+        if translation:
+            deltat2 = t2 - t1[0]
+        else:
+            deltat2 = t2
 
         distance = 0
         for i in range(size):
-            distance += self.pointDistance(t1[i], origin_difference + t2[i]) ** 2
+            distance += self.pointDistance(t1[i], deltat2[i]) ** 2
         distance = np.sqrt(distance / size)
         if (verbose):
             print(f"Distance between trajectories : {distance}")
@@ -181,7 +199,7 @@ class Trajectories:
         t1 = self.getTrajectory(index1)
         t2 = self.getTrajectory(index2)
         return self.trajectoryDistance(self, t1, t2, heuristic=1, verbose=False)
-    
+
     # Distance between two trajectories.
     @staticmethod
     def trajectoryDistance(self, t1, t2, heuristic=1, verbose=False):
@@ -222,13 +240,13 @@ def createSimilarTrajectories(minimize=False):
     return similar_trajectories
 
 # Create nb_trajectories random trajectories
-def createRandomTrajectories(nb_trajectories=10, minimize=False):
+def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
     random_trajectories = Trajectories()
 
-    t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
-    random_trajectories.addTrajectory(t0)
-    for i in range(nb_trajectories - 1):
-        random_trajectories.addRandomTrajectory()
+    #t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
+    #random_trajectories.addTrajectory(t0)
+    for _ in range(nb_trajectories - 1):
+        random_trajectories.addRandomTrajectory(nbPoints=nb_points)
 
     random_trajectories.completeDisplay()
     if (minimize):
@@ -240,9 +258,10 @@ def createRandomTrajectories(nb_trajectories=10, minimize=False):
 def createCSVTrajectories(file):
     csv_trajectories = Trajectories()
 
-    csv_trajectories.addTrajectoryFromCsv(file)
+    csv_trajectories.addTrajectoriesFromCsv(file)
+    #csv_trajectories.printTrajectories()
     csv_trajectories.showTrajectories()
-    csv_trajectories.attuneTrajectories(0.99,0)
+    csv_trajectories.attuneTrajectories(0.99, 700)
     csv_trajectories.showTrajectories()
     return csv_trajectories
 

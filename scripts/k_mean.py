@@ -1,5 +1,6 @@
 from trajectory_clustering import Trajectories
 from trajectory_clustering import createRandomTrajectories
+from trajectory_clustering import createCSVTrajectories
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,18 +26,19 @@ def assignment(kmeans, traj):
         assign.append(np.argmin(y_hat))
     return assign
 
-# Update each k-mean trajectories depending on 
+# Update each k-mean trajectories depending on
 def update(kmeans, traj, assign):
     sums = np.zeros_like(kmeans.trajectories)
     cpts = np.zeros(len(sums))
 
     for i in range(len(assign)):
         sums[assign[i]] += traj.trajectories[i]
-        cpts[assign[i]] +=1
+        cpts[assign[i]] += 1
     for i in range(len(sums)):
         sums[i] /= cpts[i]
-
     kmeans.trajectories = sums
+    return kmeans
+
 
 def kmean(k, traj, nb_iter = 10, translation = True):
     print("\n-- K-MEAN CLUSTERING --\n")
@@ -44,6 +46,7 @@ def kmean(k, traj, nb_iter = 10, translation = True):
     m = initializationFromTrajectories(k, traj)
     translatedTraj = Trajectories()
     for t in traj.trajectories:
+
         translatedTraj.addTrajectory(t-t[0])
     workingTraj = None
     if translation:
@@ -54,9 +57,7 @@ def kmean(k, traj, nb_iter = 10, translation = True):
     for _ in range(nb_iter):
         a = assignment(m, workingTraj)
         update(m, workingTraj, a)
-        m.showTrajectories()
 
-
-
-traj = createRandomTrajectories(nb_trajectories=30)
-kmean(4, traj)
+#traj = createRandomTrajectories(nb_trajectories=100, nb_points=200)
+traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
+kmean(2, traj, nb_iter=20)
