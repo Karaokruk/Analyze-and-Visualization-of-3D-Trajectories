@@ -14,12 +14,13 @@ class Trajectories:
     def addRandomTrajectory(self, maxValue=10, nbPoints=10, nbCoordinates=2):
         self.trajectories.append(maxValue * np.random.rand(nbPoints, nbCoordinates))
 
-    def addTrajectoryFromCsv(self, file):
+    def addTrajectoriesFromCsv(self, file):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
             t = []
-            x = y = z = -1
+            x = y = z = state_id = trial_id = -1
+            prev_trial_id = -1
             for row in csv_reader:
                 if line_count == 0:
                     print(f"Column names are {', '.join(row)}")
@@ -31,19 +32,33 @@ class Trajectories:
                             y = i
                         elif row[i] == "CameraPosition.z":
                             z = i
+                        elif row[i] == "TrialState":
+                            state_id = i
+                        elif row[i] == "TrialID":
+                            trial_id = i
                     print(f"before : x = {x}, y = {y}, z = {z}")
                     # If the col isn't found
                     if x == -1:
-                        x = int(input("Camera position X not found. Enter the row (index - 1) : "))
+                        x = int(input("Camera position X index not found. Enter the column (index - 1) : "))
                     if y == -1:
-                        y = int(input("Camera position Y not found. Enter the row (index - 1) : "))
+                        y = int(input("Camera position Y index not found. Enter the column (index - 1) : "))
                     if z == -1:
-                        z = int(input("Camera position Z not found. Enter the row (index - 1) : "))
-                    print(f"after : x = {x}, y = {y}, z = {z}")
+                        z = int(input("Camera position Z index not found. Enter the column (index - 1) : "))
+                    if state_id == -1:
+                        state_id = int(input("Trial state index not found. Enter the column (index - 1) : "))
+                    if trial_id == -1:
+                        trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
+                    print(f"after : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id}")
                 else:
-                    t.append([float(row[x]), float(row[y]), float(row[z])])
+                    if row[trial_id] != prev_trial_id and t != [] and prev_trial_id != -1:
+                        self.addTrajectory(t)
+                        t = []
+                    if row[state_id] == "OnTask":
+                        prev_trial_id = row[trial_id]
+                        t.append([float(row[x]), float(row[y]), float(row[z])])
                 line_count += 1
-            self.addTrajectory(t)
+            if t != []:
+                self.addTrajectory(t)
             print(f"Processed {line_count} lines.")
 
 
@@ -240,7 +255,8 @@ def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
 def createCSVTrajectories(file):
     csv_trajectories = Trajectories()
 
-    csv_trajectories.addTrajectoryFromCsv(file)
+    csv_trajectories.addTrajectoriesFromCsv(file)
+    #csv_trajectories.printTrajectories()
     csv_trajectories.showTrajectories()
     csv_trajectories.attuneTrajectories(0.99,0)
     csv_trajectories.showTrajectories()
