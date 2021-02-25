@@ -176,11 +176,14 @@ class Trajectories:
     def heuristic0(self, t1, t2, translation=False, verbose=False):
         size = min(t1.shape[0], t2.shape[0])
 
+        deltat1 = None
         deltat2 = None
         if translation:
-            deltat2 = t2 - t1[0]
+            deltat2 = t2 - t2[0]
+            deltat1 = t1 - t1[0]
         else:
             deltat2 = t2
+            deltat1 = t1
 
         distance = 0
         for i in range(size):
@@ -198,14 +201,14 @@ class Trajectories:
     def indexedTrajectoriesDistance(self, index1, index2, heuristic=1, verbose=False):
         t1 = self.getTrajectory(index1)
         t2 = self.getTrajectory(index2)
-        return self.trajectoryDistance(self, t1, t2, heuristic=1, verbose=False)
+        return self.trajectoryDistance(self, t1, t2, heuristic=heuristic, verbose=verbose)
 
     # Distance between two trajectories.
     @staticmethod
     def trajectoryDistance(self, t1, t2, heuristic=1, verbose=False):
-        if (heuristic == 0):
+        if heuristic == 0:
             return self.heuristic0(t1, t2, verbose=verbose)
-        if (heuristic == 1):
+        if heuristic == 1:
             return self.heuristic1(t1, t2, verbose=verbose)
 
     def getTrajectoriesDistances(self, verbose=False):
@@ -266,5 +269,5 @@ def createCSVTrajectories(file):
     return csv_trajectories
 
 #createSimilarTrajectories(minimize=True)
-#createRandomTrajectories(nb_trajectories=2, minimize=True)
+#createRandomTrajectories(nb_trajectories=3, minimize=True)
 #createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
