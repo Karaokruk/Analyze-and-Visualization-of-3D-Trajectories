@@ -66,7 +66,7 @@ class Trajectories:
         return self.trajectories[id]
 
     # Make all trajectories the same length
-    def attuneTrajectories(self,ratio,limit):
+    def attuneTrajectories(self, ratio, limit, verbose=False):
 
         def minimizedTrajectory0(trajectory):
             minimized = []
@@ -90,24 +90,23 @@ class Trajectories:
                 last_point = point
             minimized.append(trajectory[len(trajectory) - 1])
             return np.array(minimized)
-        # for i in range(len(self.trajectories)):
-        #     self.trajectories[i] = minimizedTrajectory1(self.trajectories[i],0.98,limit)
 
-        def minimizedTrajectory1(trajectory, ratio,limit):
+        def minimizedTrajectory1(trajectory, ratio, limit):
             tmpTraj = trajectory
             i = 0
             cpt = 0
-            while i < len(tmpTraj)-2 and len(tmpTraj) > limit:
-                if self.pointDistance(tmpTraj[i],tmpTraj[i+2]) >= ratio*(self.pointDistance(tmpTraj[i],tmpTraj[i+1])+self.pointDistance(tmpTraj[i+1],tmpTraj[i+2])):
-                    tmpTraj = np.delete(tmpTraj,i+1,0)
-                    cpt+=1
-                i+=1
+            while i < len(tmpTraj) - 2 and len(tmpTraj) > limit:
+                if self.pointDistance(tmpTraj[i], tmpTraj[i + 2]) >= ratio * (self.pointDistance(tmpTraj[i], tmpTraj[i + 1]) + self.pointDistance(tmpTraj[i + 1], tmpTraj[i + 2])):
+                    tmpTraj = np.delete(tmpTraj, i + 1, 0)
+                    cpt += 1
+                i += 1
             if cpt == 0 and len(tmpTraj) > limit:
                 limit = len(tmpTraj)
-                print(f"-------- limit is now {limit}")
+                if verbose:
+                    print(f"Limit is now {limit}")
             # print(f"{cpt} points have been removed")
             # print(f"{len(trajectory)} points remaining")
-            return tmpTraj,limit,cpt
+            return tmpTraj, limit, cpt
 
         # removed = -1
         # minimized = self.trajectories.copy()
@@ -134,7 +133,7 @@ class Trajectories:
         #     print(f"end of cycle, limit is {limit}")
 
 
-        def findTrajectoryToIter(trajectories,limit):
+        def findTrajectoryToIter(trajectories, limit):
             id = 0
             size = len(trajectories[0])
             for i in range(len(trajectories)):
@@ -146,16 +145,17 @@ class Trajectories:
         removed = -1
         toMinimize = self.trajectories.copy()
         while True:
-            id, size = findTrajectoryToIter(toMinimize,limit)
+            id, size = findTrajectoryToIter(toMinimize, limit)
             if size == limit:
                 break
-            toMinimize[id], limit, removed = minimizedTrajectory1(toMinimize[id],ratio,limit)
+            toMinimize[id], limit, removed = minimizedTrajectory1(toMinimize[id], ratio, limit)
             if removed == 0:
                 if len(toMinimize[id]) < limit:
                     if len(self.trajectories[id]) < limit:
-                        print("unable to attune trajectories because of ratio too high or limit wrongly placed")
+                        print("Unable to attune trajectories because of ratio too high or limit wrongly placed")
                         quit()
-                    print(f"resetting trajectory {id} because length {len(toMinimize[id])} lower than limit {limit}")
+                    if verbose:
+                        print(f"Resetting trajectory {id} because length {len(toMinimize[id])} is lower than limit {limit}")
                     toMinimize[id] = self.trajectories[id].copy()
         self.trajectories = toMinimize
 

@@ -43,18 +43,18 @@ def update(kmeans, traj, assign):
     return kmeans
 
 
-def kmean(k, traj, nb_iter = 10, translation = True):
+def kmean(k, traj, nb_iter=10, translation=True):
     print("\n-- K-MEAN CLUSTERING --\n")
     print("Initializing kmeans...")
-    
-    translatedTraj = Trajectories()
-    for t in traj.trajectories:
-        translatedTraj.addTrajectory(t-t[0])
+
     workingTraj = None
     if translation:
-        workingTraj = translatedTraj
+        workingTraj = Trajectories()
+        for t in traj.trajectories:
+            workingTraj.addTrajectory(t - t[0])
     else:
         workingTraj = traj
+
     m = initializationFromTrajectories(k, workingTraj)
     print("Done.\n")
     for _ in range(nb_iter):
