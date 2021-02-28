@@ -50,6 +50,7 @@ def kmean(k, traj, nb_iter=10, translation=True):
     workingTraj = None
     if translation:
         workingTraj = Trajectories()
+        workingTraj.layout = traj.layout
         for t in traj.trajectories:
             workingTraj.addTrajectory(t - t[0])
     else:
@@ -61,8 +62,7 @@ def kmean(k, traj, nb_iter=10, translation=True):
         a = assignment(m, workingTraj)
         update(m, workingTraj, a)
         #m.showTrajectories()
-        workingTraj.showTrajectories(clusters = a)
+        workingTraj.show2DTrajectoriesSeparately(clusters = a)
 
 traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
-traj.show2DTrajectoriesSeparately(verbose = True)
-#kmean(4, traj, nb_iter=20)
+kmean(4, traj, nb_iter=20)

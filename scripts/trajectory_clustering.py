@@ -250,11 +250,12 @@ class Trajectories:
             for i in range(len(self.trajectories)):
                 l = 0
                 for j in range(len(layouts_got)):
-                    if self.layout[i] == layouts_got[j]:
+                    if self.layout[i-1] == layouts_got[j]:
                         l = j
                         break
                 axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
-                axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}")
+                axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}, cluster {clusters[i]}")
+                layouts_i[l] += 1
         else:
             for i in range(len(self.trajectories)):
                 l = 0
@@ -266,8 +267,6 @@ class Trajectories:
                 axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}")
                 layouts_i[l] += 1
 
-        #plt.xlabel("x")
-        #plt.ylabel("y")
         plt.show()
 
     def completeDisplay(self):
