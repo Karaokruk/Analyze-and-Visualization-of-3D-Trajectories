@@ -8,6 +8,7 @@ import random
 
 # Get random trajectories
 def initializationFromTrajectories(size, traj):
+    print("Initializing kmeans...")
     # TODO
     # Make sure that the kmeans are not similar
     sample =  random.sample(traj.trajectories, size)
@@ -22,7 +23,7 @@ def assignment(kmeans, traj):
     for t in traj.trajectories:
         y_hat = []
         for k in kmeans.trajectories:
-            y_hat.append(Trajectories.trajectoryDistance(traj, t, k))
+            y_hat.append(Trajectories.trajectoryDistance(traj, t, k, heuristic = 0))
         assign.append(np.argmin(y_hat))
     return assign
 
@@ -39,27 +40,35 @@ def update(kmeans, traj, assign):
             sums[i] /= cpts[i]
         else:
             sums[i] = kmeans.trajectories[i]
-    kmeans.trajectories = sums
-    return kmeans
+    diff = np.sum(np.absolute(kmeans.trajectories - sums))
+    return sums, diff
 
-
-def kmean(k, traj, nb_iter=10, translation=True):
+def kmean(k, traj, nb_iter = 10, method = 2):
     print("\n-- K-MEAN CLUSTERING --\n")
-    print("Initializing kmeans...")
 
     workingTraj = None
-    if translation:
-        workingTraj = Trajectories()
-        for t in traj.trajectories:
-            workingTraj.addTrajectory(t - t[0])
+    if method == 2:
+        workingTraj = traj.vectorizedTrajectories()
+    elif method == 1:
+        workingTraj = traj.translatedTrajectories()
     else:
         workingTraj = traj
 
     m = initializationFromTrajectories(k, workingTraj)
     print("Done.\n")
-    for _ in range(nb_iter):
+    for i in range(nb_iter):
+        print(f"Iteration {i}.")
         a = assignment(m, workingTraj)
-        update(m, workingTraj, a)
+        m.trajectories, diff = update(m, workingTraj, a)
+        if diff == 0:
+            print(f"K-mean algorithm converged at iteration {i}. Stopped.")
+            break
+        else:
+            print(f"The update made a total difference of {diff} on this iteration.")
+    if method == 2:
+        m = m.trajectoriesFromVectors()
+    m.showTrajectories()
+    traj.showTrajectories(a)
 
 traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
-kmean(2, traj, nb_iter=20)
+kmean(round(len(traj.trajectories)/3), traj, nb_iter=20, method = 2)

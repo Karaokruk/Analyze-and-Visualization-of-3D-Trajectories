@@ -8,6 +8,38 @@ class Trajectories:
     def __init__(self):
         self.trajectories = []
 
+    def copy(self):
+        newTraj = Trajectories()
+        for t in self.trajectories:
+            newTraj.addTrajectory(t.copy())
+        return newTraj
+
+    def translatedTrajectories(self):
+        newTraj = Trajectories()
+        for t in self.trajectories:
+            newTraj.addTrajectory(t - t[0])
+        return newTraj
+
+    def vectorizedTrajectories(self):
+        newTraj = self.copy()
+        for i in range(len(newTraj.trajectories)):
+            for j in range(len(newTraj.trajectories[i]) - 1):
+                newTraj.trajectories[i][j] = newTraj.trajectories[i][j+1] - newTraj.trajectories[i][j]
+            newTraj.trajectories[i] = np.delete(newTraj.trajectories[i], len(newTraj.trajectories[i]) - 1, 0)
+        return newTraj 
+
+    def trajectoriesFromVectors(self):
+        newTraj = Trajectories()
+        for t in self.trajectories:
+            traj = np.zeros_like(t)
+            traj = np.append(traj, [traj[0]], axis = 0)
+            pos = np.zeros_like(t[0])
+            for i in range(len(t)):
+                pos += t[i]
+                traj[i+1] = pos
+            newTraj.addTrajectory(traj)
+        return newTraj
+
     def addTrajectory(self, trajectory):
         self.trajectories.append(np.array(trajectory))
 
@@ -157,6 +189,7 @@ class Trajectories:
                     if verbose:
                         print(f"Resetting trajectory {id} because length {len(toMinimize[id])} is lower than limit {limit}")
                     toMinimize[id] = self.trajectories[id].copy()
+        print(f"Trajectories have been attuned to {limit} points.")
         self.trajectories = toMinimize
 
 
@@ -167,7 +200,7 @@ class Trajectories:
         for i in range(len(self.trajectories)):
             print(f"Trajectory #{i} :\n{self.trajectories[i]}")
 
-    def showTrajectories(self, clusters = None):
+    def showTrajectories(self, clusters = None, verbose = False):
         import matplotlib.pyplot as plt
         nb_dimensions = self.trajectories[0].shape[1]
         prop_cycle = plt.rcParams['axes.prop_cycle']
@@ -191,14 +224,12 @@ class Trajectories:
             else:
                 for trajectory in self.trajectories:
                     ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
-        if clusters is not None:
-
+        if clusters is not None and verbose:
             print(colors)
             print(clusters)
             for i in range(len(self.trajectories)):
                 print(f"plotting line {i} with color {colors[clusters[i]]}")
                  #x, y
-
         plt.xlabel("x")
         plt.ylabel("y")
         plt.show()
@@ -275,11 +306,11 @@ def createSimilarTrajectories(minimize=False):
     t1 = [[0, 4], [1, 5], [2, 6], [3, 7], [4, 8], [5, 9], [6, 10], [7, 11], [8, 12], [9, 13]]
     similar_trajectories.addTrajectory(t0)
     similar_trajectories.addTrajectory(t1)
-    similar_trajectories.attuneTrajectories(8,0.8)
+    similar_trajectories.attuneTrajectories(0.98,0)
 
     similar_trajectories.completeDisplay()
     if (minimize):
-        similar_trajectories.attuneTrajectories(8,0.8)
+        similar_trajectories.attuneTrajectories(0.98,0)
         similar_trajectories.completeDisplay()
     return similar_trajectories
 
@@ -294,7 +325,7 @@ def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
 
     random_trajectories.completeDisplay()
     if (minimize):
-        random_trajectories.attuneTrajectories(5,0.8)
+        random_trajectories.attuneTrajectories(0.98,0)
         random_trajectories.completeDisplay()
     return random_trajectories
 
