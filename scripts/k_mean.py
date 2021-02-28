@@ -51,6 +51,7 @@ def kmean(k, traj, nb_iter = 10, method = 2):
         workingTraj = traj.vectorizedTrajectories()
     elif method == 1:
         workingTraj = traj.translatedTrajectories()
+
     else:
         workingTraj = traj
 
@@ -68,7 +69,7 @@ def kmean(k, traj, nb_iter = 10, method = 2):
     if method == 2:
         m = m.trajectoriesFromVectors()
     m.showTrajectories()
-    traj.showTrajectories(a)
+    traj.show2DTrajectoriesSeparately(clusters = a)
 
 traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
 kmean(round(len(traj.trajectories)/3), traj, nb_iter=20, method = 2)
