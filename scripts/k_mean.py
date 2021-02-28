@@ -60,6 +60,9 @@ def kmean(k, traj, nb_iter=10, translation=True):
     for _ in range(nb_iter):
         a = assignment(m, workingTraj)
         update(m, workingTraj, a)
+        #m.showTrajectories()
+        workingTraj.showTrajectories(clusters = a)
 
 traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
-kmean(2, traj, nb_iter=20)
+traj.show2DTrajectoriesSeparately(verbose = True)
+#kmean(4, traj, nb_iter=20)
