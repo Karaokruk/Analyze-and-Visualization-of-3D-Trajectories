@@ -7,14 +7,32 @@ import matplotlib.pyplot as plt
 import random
 
 # Get random trajectories
-def initializationFromTrajectories(size, traj):
+def initializationFromTrajectories(size, traj, per_layouts = False, per_layouts_randomization = False):
     print("Initializing kmeans...")
-    # TODO
-    # Make sure that the kmeans are not similar
-    sample =  random.sample(traj.trajectories, size)
     kmeans = Trajectories()
-    for t in sample:
-        kmeans.addTrajectory(t)
+    # Initializing our kmeans randomly
+    if not per_layouts:
+        sample = random.sample(traj.trajectories, size)
+        for t in sample:
+            kmeans.addTrajectory(t)
+    # Initialization using one random trajectory per layouts
+    # NOT RANDOM
+    else:
+        layouts_got = []
+        if per_layouts_randomization:
+            indexes = list(range(0, len(traj.layouts)))
+            random.shuffle(indexes)
+            for i in indexes:
+                if traj.layouts[i] not in layouts_got:
+                    kmeans.addTrajectory(traj.trajectories[i])
+                    layouts_got.append(traj.layouts[i])
+                    print(f"Layout type : {traj.layouts[i]}")
+        else:
+            for i in range(len(traj.layouts)):
+                print(f"Length : {len(traj.trajectories)}, layouts : {len(traj.layouts)}, i : {i}")
+                if traj.layouts[i] not in layouts_got:
+                    kmeans.addTrajectory(traj.trajectories[i])
+                    layouts_got.append(traj.layouts[i])
     return kmeans
 
 # At each step, assign each trajectories to a cluster
@@ -54,8 +72,9 @@ def kmean(k, traj, nb_iter = 10, method = 2):
 
     else:
         workingTraj = traj
+    workingTraj.layouts = traj.layouts
 
-    m = initializationFromTrajectories(k, workingTraj)
+    m = initializationFromTrajectories(k, workingTraj, per_layouts=True, per_layouts_randomization=True)
     print("Done.\n")
     for i in range(nb_iter):
         print(f"Iteration {i}.")
@@ -66,10 +85,13 @@ def kmean(k, traj, nb_iter = 10, method = 2):
             break
         else:
             print(f"The update made a total difference of {diff} on this iteration.")
+        workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
     if method == 2:
         m = m.trajectoriesFromVectors()
-    m.showTrajectories()
-    traj.show2DTrajectoriesSeparately(clusters = a)
+    #m.showTrajectories()
+    #traj.show2DTrajectoriesSeparately(clusters = a)
+    workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
 
 traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
-kmean(round(len(traj.trajectories)/3), traj, nb_iter=20, method = 2)
+#kmean(round(len(traj.trajectories)/3), traj, nb_iter=20, method = 2)
+kmean(3, traj, method=0)

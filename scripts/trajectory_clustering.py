@@ -7,7 +7,7 @@ class Trajectories:
 
     def __init__(self):
         self.trajectories = []
-        self.layout = []
+        self.layouts = []
 
     def copy(self):
         newTraj = Trajectories()
@@ -48,7 +48,7 @@ class Trajectories:
         self.trajectories.append(maxValue * np.random.rand(nbPoints, nbCoordinates))
 
     def addLayout(self, layout_type):
-        self.layout.append(layout_type)
+        self.layouts.append(layout_type)
 
     def addTrajectoriesFromCsv(self, file):
         with open(file) as csv_file:
@@ -104,6 +104,9 @@ class Trajectories:
                 line_count += 1
             if t != []:
                 self.addTrajectory(t)
+                if layout_type != []:
+                    self.addLayout(layout_type[0])
+
             print(f"Processed {line_count} lines.")
 
 
@@ -213,8 +216,8 @@ class Trajectories:
 
     def printLayouts(self):
         print("-- Layout types --")
-        for i in range(len(self.layout)):
-            print(f"Layout type for trajectory #{i+1}: {self.layout[i]}")
+        for i in range(len(self.layouts)):
+            print(f"Layout type for trajectory #{i+1}: {self.layouts[i]}")
         print(f"For a total of {len(self.trajectories)} trajectories.")
 
     def showTrajectories(self, clusters = None, verbose = False):
@@ -259,7 +262,7 @@ class Trajectories:
         # Finding the different types of layouts and the number of occurences
         layouts_got = []
         layouts_nb = []
-        for l in self.layout:
+        for l in self.layouts:
             for i in range(len(layouts_got)):
                 if layouts_got[i] == l:
                     layouts_nb[i] += 1
@@ -273,31 +276,24 @@ class Trajectories:
             print(layouts_got)
             print(layouts_nb)
         # Showing the trajectories
-        fig, axs = plt.subplots(max(layouts_nb), len(layouts_got))
+        fig, axs = plt.subplots(max(layouts_nb), len(layouts_got), sharex=True, sharey=True)
         layouts_i = []
         for i in range(len(layouts_got)):
             layouts_i.append(0)
 
-        if clusters is not None:
-            for i in range(len(self.trajectories)):
-                l = 0
-                for j in range(len(layouts_got)):
-                    if self.layout[i-1] == layouts_got[j]:
-                        l = j
-                        break
-                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
+        for i in range(len(self.trajectories)):
+            l = 0
+            for j in range(len(layouts_got)):
+                if self.layouts[i] == layouts_got[j]:
+                    l = j
+                    break
+            if clusters is not None:
+                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 2], color = colors[clusters[i]])
                 axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}, cluster {clusters[i]}")
-                layouts_i[l] += 1
-        else:
-            for i in range(len(self.trajectories)):
-                l = 0
-                for j in range(len(layouts_got)):
-                    if self.layout[i-1] == layouts_got[j]:
-                        l = j
-                        break
+            else:
                 axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 2])
                 axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}")
-                layouts_i[l] += 1
+            layouts_i[l] += 1
 
         plt.show()
 
