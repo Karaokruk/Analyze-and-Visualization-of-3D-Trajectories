@@ -74,7 +74,7 @@ def kmean(k, traj, nb_iter = 10, method = 2):
         workingTraj = traj
     workingTraj.layouts = traj.layouts
 
-    m = initializationFromTrajectories(k, workingTraj, per_layouts=True, per_layouts_randomization=True)
+    m = initializationFromTrajectories(k, workingTraj, per_layouts=True, per_layouts_randomization=False)
     print("Done.\n")
     for i in range(nb_iter):
         print(f"Iteration {i}.")
@@ -85,13 +85,29 @@ def kmean(k, traj, nb_iter = 10, method = 2):
             break
         else:
             print(f"The update made a total difference of {diff} on this iteration.")
-        workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
+        #workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
     if method == 2:
         m = m.trajectoriesFromVectors()
     #m.showTrajectories()
     #traj.show2DTrajectoriesSeparately(clusters = a)
     workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
 
-traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv")
+def kmean_opencv(traj, k=2, nb_iter=10):
+    print("\n-- OPENCV K-MEAN CLUSTERING --\n")
+    import cv2 as cv
+
+    Z = np.float32(traj.trajectories)
+
+    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 10, 1.0)
+    ret, label, center = cv.kmeans(Z, k, None, criteria, nb_iter, cv.KMEANS_RANDOM_CENTERS)
+
+    a = []
+    for l in label:
+        a.append(l[0])
+
+    traj.show2DTrajectoriesSeparately(clusters=a)
+
+traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv", verbose = False)
 #kmean(round(len(traj.trajectories)/3), traj, nb_iter=20, method = 2)
-kmean(3, traj, method=0)
+#kmean(3, traj, method=0)
+kmean_opencv(traj, k=3, nb_iter=10)
