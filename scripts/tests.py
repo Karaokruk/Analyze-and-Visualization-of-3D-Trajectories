@@ -39,7 +39,7 @@ class TrajectoriesTest:
         straightTrajectory.attuneTrajectories(ratio=0.98, limit=0)
         return straightTrajectory.getTrajectory(0).shape[0] == 2
 
-    def trajectoriesAttuningTest(self, nb_points=10, verbose=False):
+    def trajectoriesAttuningTest(self, nb_points=100, verbose=False):
         if verbose:
             print("-- Trajectories attuning test --")
 
@@ -52,7 +52,9 @@ class TrajectoriesTest:
             t1.append((x - 2, x * x))
         trajectories.addTrajectory(t0)
         trajectories.addTrajectory(t1)
-        trajectories.attuneTrajectories(ratio=0.995, limit=0)
+        trajectories.completeDisplay()
+        trajectories.attuneTrajectories(ratio=0.999, limit=0)
+        trajectories.completeDisplay()
         return trajectories.getTrajectory(0).shape[0] > 2
 
     def kmeanTest(self, verbose=False):
