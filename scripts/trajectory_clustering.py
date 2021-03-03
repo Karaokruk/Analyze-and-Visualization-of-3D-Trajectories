@@ -7,6 +7,39 @@ class Trajectories:
 
     def __init__(self):
         self.trajectories = []
+        self.layouts = []
+
+    def copy(self):
+        newTraj = Trajectories()
+        for t in self.trajectories:
+            newTraj.addTrajectory(t.copy())
+        return newTraj
+
+    def translatedTrajectories(self):
+        newTraj = Trajectories()
+        for t in self.trajectories:
+            newTraj.addTrajectory(t - t[0])
+        return newTraj
+
+    def vectorizedTrajectories(self):
+        newTraj = self.copy()
+        for i in range(len(newTraj.trajectories)):
+            for j in range(len(newTraj.trajectories[i]) - 1):
+                newTraj.trajectories[i][j] = newTraj.trajectories[i][j+1] - newTraj.trajectories[i][j]
+            newTraj.trajectories[i] = np.delete(newTraj.trajectories[i], len(newTraj.trajectories[i]) - 1, 0)
+        return newTraj 
+
+    def trajectoriesFromVectors(self):
+        newTraj = Trajectories()
+        for t in self.trajectories:
+            traj = np.zeros_like(t)
+            traj = np.append(traj, [traj[0]], axis = 0)
+            pos = np.zeros_like(t[0])
+            for i in range(len(t)):
+                pos += t[i]
+                traj[i+1] = pos
+            newTraj.addTrajectory(traj)
+        return newTraj
 
     def addTrajectory(self, trajectory):
         self.trajectories.append(np.array(trajectory))
@@ -14,13 +47,16 @@ class Trajectories:
     def addRandomTrajectory(self, maxValue=10, nbPoints=10, nbCoordinates=2):
         self.trajectories.append(maxValue * np.random.rand(nbPoints, nbCoordinates))
 
+    def addLayout(self, layout_type):
+        self.layouts.append(layout_type)
+
     def addTrajectoriesFromCsv(self, file):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
             t = []
-            x = y = z = state_id = trial_id = -1
-            prev_trial_id = -1
+            layout_type = []
+            x = y = z = state_id = trial_id = prev_trial_id = layout = -1
             for row in csv_reader:
                 if line_count == 0:
                     print(f"Column names are {', '.join(row)}")
@@ -36,7 +72,9 @@ class Trajectories:
                             state_id = i
                         elif row[i] == "TrialID":
                             trial_id = i
-                    print(f"before : x = {x}, y = {y}, z = {z}")
+                        elif row[i] == "Layout":
+                            layout = i
+                    print(f"before : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
                     # If the col isn't found
                     if x == -1:
                         x = int(input("Camera position X index not found. Enter the column (index - 1) : "))
@@ -48,17 +86,28 @@ class Trajectories:
                         state_id = int(input("Trial state index not found. Enter the column (index - 1) : "))
                     if trial_id == -1:
                         trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
-                    print(f"after : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id}")
+                    if layout == -1:
+                        layout = int(input("Layout index not found. Enter the column (index - 1) : "))
+                    print(f"after : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
                 else:
                     if row[trial_id] != prev_trial_id and t != [] and prev_trial_id != -1:
                         self.addTrajectory(t)
                         t = []
+                        if layout_type != []:
+                            self.addLayout(layout_type[0])
+                            layout_type = []
                     if row[state_id] == "OnTask":
+                        if layout_type == []:
+                            layout_type.append(row[layout])
                         prev_trial_id = row[trial_id]
-                        t.append([float(row[x]), float(row[y]), float(row[z])])
+                        #t.append([float(row[x]), float(row[y]), float(row[z])])
+                        t.append([float(row[x]), float(row[z])])
                 line_count += 1
             if t != []:
                 self.addTrajectory(t)
+                if layout_type != []:
+                    self.addLayout(layout_type[0])
+
             print(f"Processed {line_count} lines.")
 
 
@@ -108,31 +157,6 @@ class Trajectories:
             # print(f"{len(trajectory)} points remaining")
             return tmpTraj, limit, cpt
 
-        # removed = -1
-        # minimized = self.trajectories.copy()
-        # while removed != 0:
-        #     print(f"----------------------new cycle with limit {limit}")
-        #     removed = 0
-        #     tmpTrajectories = []
-        #     for i in range(len(self.trajectories)):
-        #         print(i)
-        #         tmp,limit,cpt = minimizedTrajectory1(minimized[i],ratio,limit)
-        #         tmpTrajectories.append(tmp)
-        #         removed+=cpt
-        #     for i in range(len(self.trajectories)):
-        #         if len(tmpTrajectories[i]) < limit:
-        #             if len(self.trajectories[i]) < limit:
-        #                 print(len(self.trajectories[i]))
-        #                 print(limit)
-        #                 print("unable to attune trajectories because of ratio too high or limit wrongly placed")
-        #                 quit()
-        #             tmpTrajectories[i] = self.trajectories[i]
-        #             print(f"trial {i} had too less points")
-        #             removed = -1
-        #     minimized = tmpTrajectories
-        #     print(f"end of cycle, limit is {limit}")
-
-
         def findTrajectoryToIter(trajectories, limit):
             id = 0
             size = len(trajectories[0])
@@ -157,17 +181,22 @@ class Trajectories:
                     if verbose:
                         print(f"Resetting trajectory {id} because length {len(toMinimize[id])} is lower than limit {limit}")
                     toMinimize[id] = self.trajectories[id].copy()
+        print(f"Trajectories have been attuned to {limit} points.")
         self.trajectories = toMinimize
-
-
-
 
     def printTrajectories(self):
         print("-- Trajectories --")
         for i in range(len(self.trajectories)):
             print(f"Trajectory #{i} :\n{self.trajectories[i]}")
 
-    def showTrajectories(self, clusters = None):
+
+    def printLayouts(self):
+        print("-- Layout types --")
+        for i in range(len(self.layouts)):
+            print(f"Layout type for trajectory #{i+1}: {self.layouts[i]}")
+        print(f"For a total of {len(self.trajectories)} trajectories.")
+
+    def showTrajectories(self, clusters = None, verbose = False):
         import matplotlib.pyplot as plt
         nb_dimensions = self.trajectories[0].shape[1]
         prop_cycle = plt.rcParams['axes.prop_cycle']
@@ -191,16 +220,57 @@ class Trajectories:
             else:
                 for trajectory in self.trajectories:
                     ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
-        if clusters is not None:
-
+        if clusters is not None and verbose:
             print(colors)
             print(clusters)
             for i in range(len(self.trajectories)):
                 print(f"plotting line {i} with color {colors[clusters[i]]}")
                  #x, y
-
         plt.xlabel("x")
         plt.ylabel("y")
+        plt.show()
+
+    def show2DTrajectoriesSeparately(self, clusters = None, verbose = False):
+        # Initializing the function
+        import matplotlib.pyplot as plt
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
+        # Finding the different types of layouts and the number of occurences
+        layouts_got = []
+        layouts_nb = []
+        for l in self.layouts:
+            for i in range(len(layouts_got)):
+                if layouts_got[i] == l:
+                    layouts_nb[i] += 1
+            if l not in layouts_got:
+                layouts_got.append(l)
+                layouts_nb.append(1)
+        # Printing the number of each layouts
+        if verbose:
+            for i in range(len(layouts_got)):
+                print(f"Layout {layouts_got[i]} found {layouts_nb[i]} times")
+            print(layouts_got)
+            print(layouts_nb)
+        # Showing the trajectories
+        fig, axs = plt.subplots(max(layouts_nb), len(layouts_got), sharex=True, sharey=True)
+        layouts_i = []
+        for i in range(len(layouts_got)):
+            layouts_i.append(0)
+
+        for i in range(len(self.trajectories)):
+            l = 0
+            for j in range(len(layouts_got)):
+                if self.layouts[i] == layouts_got[j]:
+                    l = j
+                    break
+            if clusters is not None:
+                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
+                axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}, cluster {clusters[i]}")
+            else:
+                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1])
+                axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}")
+            layouts_i[l] += 1
+
         plt.show()
 
     def completeDisplay(self):
@@ -275,11 +345,11 @@ def createSimilarTrajectories(minimize=False):
     t1 = [[0, 4], [1, 5], [2, 6], [3, 7], [4, 8], [5, 9], [6, 10], [7, 11], [8, 12], [9, 13]]
     similar_trajectories.addTrajectory(t0)
     similar_trajectories.addTrajectory(t1)
-    similar_trajectories.attuneTrajectories(8,0.8)
+    similar_trajectories.attuneTrajectories(0.98,0)
 
     similar_trajectories.completeDisplay()
     if (minimize):
-        similar_trajectories.attuneTrajectories(8,0.8)
+        similar_trajectories.attuneTrajectories(0.98,0)
         similar_trajectories.completeDisplay()
     return similar_trajectories
 
@@ -294,19 +364,22 @@ def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
 
     random_trajectories.completeDisplay()
     if (minimize):
-        random_trajectories.attuneTrajectories(5,0.8)
+        random_trajectories.attuneTrajectories(0.98,0)
         random_trajectories.completeDisplay()
     return random_trajectories
 
 # Create one trajectory from a file
-def createCSVTrajectories(file):
+def createCSVTrajectories(file, verbose = False):
     csv_trajectories = Trajectories()
 
     csv_trajectories.addTrajectoriesFromCsv(file)
-    #csv_trajectories.printTrajectories()
-    csv_trajectories.showTrajectories()
+    if verbose:
+        csv_trajectories.printTrajectories()
+        csv_trajectories.showTrajectories()
     csv_trajectories.attuneTrajectories(0.98, 0)
-    csv_trajectories.showTrajectories()
+    if verbose:
+        csv_trajectories.printTrajectories()
+        csv_trajectories.showTrajectories()
     return csv_trajectories
 
 #createSimilarTrajectories(minimize=True)
