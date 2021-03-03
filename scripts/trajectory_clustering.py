@@ -156,31 +156,6 @@ class Trajectories:
             # print(f"{len(trajectory)} points remaining")
             return tmpTraj, limit, cpt
 
-        # removed = -1
-        # minimized = self.trajectories.copy()
-        # while removed != 0:
-        #     print(f"----------------------new cycle with limit {limit}")
-        #     removed = 0
-        #     tmpTrajectories = []
-        #     for i in range(len(self.trajectories)):
-        #         print(i)
-        #         tmp,limit,cpt = minimizedTrajectory1(minimized[i],ratio,limit)
-        #         tmpTrajectories.append(tmp)
-        #         removed+=cpt
-        #     for i in range(len(self.trajectories)):
-        #         if len(tmpTrajectories[i]) < limit:
-        #             if len(self.trajectories[i]) < limit:
-        #                 print(len(self.trajectories[i]))
-        #                 print(limit)
-        #                 print("unable to attune trajectories because of ratio too high or limit wrongly placed")
-        #                 quit()
-        #             tmpTrajectories[i] = self.trajectories[i]
-        #             print(f"trial {i} had too less points")
-        #             removed = -1
-        #     minimized = tmpTrajectories
-        #     print(f"end of cycle, limit is {limit}")
-
-
         def findTrajectoryToIter(trajectories, limit):
             id = 0
             size = len(trajectories[0])
@@ -240,7 +215,7 @@ class Trajectories:
             ax = fig.gca(projection="3d")
             if clusters is not None:
                 for i in range(len(self.trajectories)):
-                    ax.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
+                    ax.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i] % len(colors)])
             else:
                 for trajectory in self.trajectories:
                     ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
