@@ -100,7 +100,8 @@ class Trajectories:
                         if layout_type == []:
                             layout_type.append(row[layout])
                         prev_trial_id = row[trial_id]
-                        t.append([float(row[x]), float(row[y]), float(row[z])])
+                        #t.append([float(row[x]), float(row[y]), float(row[z])])
+                        t.append([float(row[x]), float(row[z])])
                 line_count += 1
             if t != []:
                 self.addTrajectory(t)
@@ -263,10 +264,10 @@ class Trajectories:
                     l = j
                     break
             if clusters is not None:
-                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 2], color = colors[clusters[i]])
+                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
                 axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}, cluster {clusters[i]}")
             else:
-                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 2])
+                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1])
                 axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}")
             layouts_i[l] += 1
 
@@ -368,14 +369,17 @@ def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
     return random_trajectories
 
 # Create one trajectory from a file
-def createCSVTrajectories(file):
+def createCSVTrajectories(file, verbose = False):
     csv_trajectories = Trajectories()
 
     csv_trajectories.addTrajectoriesFromCsv(file)
-    #csv_trajectories.printTrajectories()
-    csv_trajectories.showTrajectories()
+    if verbose:
+        csv_trajectories.printTrajectories()
+        csv_trajectories.showTrajectories()
     csv_trajectories.attuneTrajectories(0.98, 0)
-    csv_trajectories.showTrajectories()
+    if verbose:
+        csv_trajectories.printTrajectories()
+        csv_trajectories.showTrajectories()
     return csv_trajectories
 
 #createSimilarTrajectories(minimize=True)
