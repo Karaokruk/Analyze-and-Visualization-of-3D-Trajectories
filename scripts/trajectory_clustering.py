@@ -44,13 +44,13 @@ class Trajectories:
     def addTrajectory(self, trajectory):
         self.trajectories.append(np.array(trajectory))
 
-    def addRandomTrajectory(self, maxValue=10, nbPoints=10, nbCoordinates=2):
+    def addRandomTrajectory(self, maxValue = 10, nbPoints = 10, nbCoordinates = 2):
         self.trajectories.append(maxValue * np.random.rand(nbPoints, nbCoordinates))
 
     def addLayout(self, layout_type):
         self.layouts.append(layout_type)
 
-    def addTrajectoriesFromCsv(self, file):
+    def addTrajectoriesFromCsv(self, file, verbose = False):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
@@ -59,7 +59,8 @@ class Trajectories:
             x = y = z = state_id = trial_id = prev_trial_id = layout = -1
             for row in csv_reader:
                 if line_count == 0:
-                    print(f"Column names are {', '.join(row)}")
+                    if verbose:
+                        print(f"Column names are {', '.join(row)}")
                     # Automatic version
                     for i in range(len(row)):
                         if row[i] == "CameraPosition.x":
@@ -74,7 +75,8 @@ class Trajectories:
                             trial_id = i
                         elif row[i] == "Layout":
                             layout = i
-                    print(f"before : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
+                    if verbose:
+                        print(f"Before input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
                     # If the col isn't found
                     if x == -1:
                         x = int(input("Camera position X index not found. Enter the column (index - 1) : "))
@@ -88,7 +90,8 @@ class Trajectories:
                         trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
                     if layout == -1:
                         layout = int(input("Layout index not found. Enter the column (index - 1) : "))
-                    print(f"after : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
+                    if verbose:
+                        print(f"After input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
                 else:
                     if row[trial_id] != prev_trial_id and t != [] and prev_trial_id != -1:
                         self.addTrajectory(t)
@@ -108,14 +111,15 @@ class Trajectories:
                 if layout_type != []:
                     self.addLayout(layout_type[0])
 
-            print(f"Processed {line_count} lines.")
+            if verbose:
+                print(f"Processed {line_count} lines.")
 
 
     def getTrajectory(self, id):
         return self.trajectories[id]
 
     # Make all trajectories the same length
-    def attuneTrajectories(self, ratio, limit, verbose=False):
+    def attuneTrajectories(self, ratio, limit, verbose = False):
 
         def minimizedTrajectory0(trajectory):
             minimized = []
@@ -309,24 +313,24 @@ class Trajectories:
         return distance
 
     # Adds a translation to heuristic0 by pasting the 2nd trajectory origin onto the 1st
-    def heuristic1(self, t1, t2, verbose=False):
-        return self.heuristic0(t1, t2, translation=True, verbose=verbose)
+    def heuristic1(self, t1, t2, verbose = False):
+        return self.heuristic0(t1, t2, translation = True, verbose = verbose)
 
     # Distance between two trajectories of the same class using indexes
-    def indexedTrajectoriesDistance(self, index1, index2, heuristic=1, verbose=False):
+    def indexedTrajectoriesDistance(self, index1, index2, heuristic = 1, verbose = False):
         t1 = self.getTrajectory(index1)
         t2 = self.getTrajectory(index2)
-        return self.trajectoryDistance(self, t1, t2, heuristic=heuristic, verbose=verbose)
+        return self.trajectoryDistance(self, t1, t2, heuristic = heuristic, verbose = verbose)
 
     # Distance between two trajectories.
     @staticmethod
-    def trajectoryDistance(self, t1, t2, heuristic=1, verbose=False):
+    def trajectoryDistance(self, t1, t2, heuristic = 1, verbose = False):
         if heuristic == 0:
-            return self.heuristic0(t1, t2, verbose=verbose)
+            return self.heuristic0(t1, t2, verbose = verbose)
         if heuristic == 1:
-            return self.heuristic1(t1, t2, verbose=verbose)
+            return self.heuristic1(t1, t2, verbose = verbose)
 
-    def getTrajectoriesDistances(self, verbose=False):
+    def getTrajectoriesDistances(self, verbose = False):
         if (verbose):
             print("-- Distances between all trajectories --")
         distances = []
@@ -334,7 +338,7 @@ class Trajectories:
         for i in range(nb_trajectories - 1):
             i_distances = []
             for j in range(i + 1, nb_trajectories):
-                i_distances.append(self.indexedTrajectoriesDistance(i, j, verbose=verbose))
+                i_distances.append(self.indexedTrajectoriesDistance(i, j, verbose = verbose))
             distances.append(i_distances)
         return distances
 
@@ -342,7 +346,7 @@ class Trajectories:
 ## Different kind of Trajectories call
 
 # Create two same trajectories but spaced out by 4 units
-def createSimilarTrajectories(minimize=False):
+def createSimilarTrajectories(minimize = False):
     similar_trajectories = Trajectories()
 
     t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
@@ -358,17 +362,17 @@ def createSimilarTrajectories(minimize=False):
     return similar_trajectories
 
 # Create nb_trajectories random trajectories
-def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
+def createRandomTrajectories(nb_trajectories = 10, nb_points = 10, minimize = False):
     random_trajectories = Trajectories()
 
     #t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
     #random_trajectories.addTrajectory(t0)
     for _ in range(nb_trajectories - 1):
-        random_trajectories.addRandomTrajectory(nbPoints=nb_points)
+        random_trajectories.addRandomTrajectory(nbPoints = nb_points)
 
     random_trajectories.completeDisplay()
     if (minimize):
-        random_trajectories.attuneTrajectories(0.98,0)
+        random_trajectories.attuneTrajectories(0.98, 0)
         random_trajectories.completeDisplay()
     return random_trajectories
 
@@ -376,7 +380,7 @@ def createRandomTrajectories(nb_trajectories=10, nb_points=10, minimize=False):
 def createCSVTrajectories(file, verbose = False):
     csv_trajectories = Trajectories()
 
-    csv_trajectories.addTrajectoriesFromCsv(file)
+    csv_trajectories.addTrajectoriesFromCsv(file, verbose = True)
     if verbose:
         csv_trajectories.printTrajectories()
         csv_trajectories.showTrajectories()
@@ -386,6 +390,6 @@ def createCSVTrajectories(file, verbose = False):
         csv_trajectories.showTrajectories()
     return csv_trajectories
 
-#createSimilarTrajectories(minimize=True)
-#createRandomTrajectories(nb_trajectories=3, minimize=True)
+#createSimilarTrajectories(minimize = True)
+#createRandomTrajectories(nb_trajectories = 3, minimize = True)
 #createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
