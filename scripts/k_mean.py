@@ -42,6 +42,12 @@ def initializationFromTrajectories(size, traj, per_layout=False, per_layout_rand
                     layouts_got.append(traj.layouts[i])
     return kmeans
 
+def getAssignmentFromResponsabilty(responsability):
+    assign = []
+    for t in responsability.T:
+        assign.append(np.argmax(t))
+    return assign
+
 # At each step, assign each trajectories to a cluster
 def assignment(kmeans, traj):
     assign = []
@@ -50,16 +56,33 @@ def assignment(kmeans, traj):
         for k in kmeans.trajectories:
             y_hat.append(Trajectories.trajectoryDistance(traj, t, k, heuristic=0))
         assign.append(np.argmin(y_hat))
-    return assign
+    responsability = np.zeros((len(kmeans.trajectories), len(traj.trajectories)))
+    for i in range(len(kmeans.trajectories)):
+        for j in range(len(traj.trajectories)):
+            if assign[j] == i:
+                responsability[i][j] = 1
+    return responsability
+
+def softAssignment(kmeans, traj, beta):
+    responsability = np.zeros((len(kmeans.trajectories), len(traj.trajectories)))
+    for i in range(len(kmeans.trajectories)):
+        total = 0
+        for j in range(len(traj.trajectories)):
+            dist = np.exp(-beta * Trajectories.trajectoryDistance(traj, traj.trajectories[j], kmeans.trajectories[i], heuristic = 0))
+            responsability[i][j] = dist
+            total += dist
+        responsability[i] /= total
+    return responsability
 
 # Update each k-mean trajectories depending on
-def update(kmeans, traj, assign):
+def update(kmeans, traj, responsability):
     sums = np.zeros_like(kmeans.trajectories)
     cpts = np.zeros(len(sums))
 
-    for i in range(len(assign)):
-        sums[assign[i]] += traj.trajectories[i]
-        cpts[assign[i]] += 1
+    for i in range(len(responsability)):
+        for j in range(len(responsability[i])):
+            sums[i] += traj.trajectories[j] * responsability[i][j]
+            cpts[i] += responsability[i][j]
     for i in range(len(sums)):
         if cpts[i] != 0:
             sums[i] /= cpts[i]
@@ -68,7 +91,8 @@ def update(kmeans, traj, assign):
     diff = np.sum(np.absolute(kmeans.trajectories - sums))
     return sums, diff
 
-def kmean(k, traj, nb_iter=10, method=2):
+
+def kmean(k, traj, nb_iter = 10, method = 2):
     print("\n-- K-MEAN CLUSTERING --\n")
 
     #traj.showTrajectories()
@@ -85,20 +109,26 @@ def kmean(k, traj, nb_iter=10, method=2):
     print("Initialization done.\n")
     for i in range(nb_iter):
         print(f"Iteration {i}.")
-        a = assignment(m, workingTraj)
-        m.trajectories, diff = update(m, workingTraj, a)
+        r = softAssignment(m, workingTraj,1000)
+        a = getAssignmentFromResponsabilty(r)
+        m.trajectories, diff = update(m, workingTraj, r)
+        print(a)
+        input(r)
         if diff == 0:
             print(f"K-mean algorithm converged at iteration {i}. Stopped.")
             break
         else:
             print(f"The update made a total difference of {diff} on this iteration.")
-        #workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
+    print("End of k-mean algorithm. Displaying clusters and clustered trajectories.")
+
     if method == 2:
         m = m.trajectoriesFromVectors()
-    #m.showTrajectories()
-    #traj.show2DTrajectoriesSeparately(clusters = a)
-    #workingTraj.show2DTrajectoriesSeparately(verbose = True, clusters = a)
-    workingTraj.showTrajectoriesSeparately(verbose = True, clusters = a)
+    nbPerCluster = np.zeros(len(m.trajectories))
+    for i in a:
+        nbPerCluster[i] += 1
+    print(nbPerCluster)
+    m.showTrajectories()
+    traj.showTrajectories(a)
 
 def kmean_opencv(traj, k = 2, nb_iter = 10):
     print("\n-- OPENCV K-MEAN CLUSTERING --\n")
