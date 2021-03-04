@@ -27,7 +27,7 @@ class Trajectories:
             for j in range(len(newTraj.trajectories[i]) - 1):
                 newTraj.trajectories[i][j] = newTraj.trajectories[i][j+1] - newTraj.trajectories[i][j]
             newTraj.trajectories[i] = np.delete(newTraj.trajectories[i], len(newTraj.trajectories[i]) - 1, 0)
-        return newTraj 
+        return newTraj
 
     def trajectoriesFromVectors(self):
         newTraj = Trajectories()
@@ -100,8 +100,8 @@ class Trajectories:
                         if layout_type == []:
                             layout_type.append(row[layout])
                         prev_trial_id = row[trial_id]
-                        #t.append([float(row[x]), float(row[y]), float(row[z])])
-                        t.append([float(row[x]), float(row[z])])
+                        t.append([float(row[x]), float(row[y]), float(row[z])]) # 3d
+                        #t.append([float(row[x]), float(row[z])]) # 2d
                 line_count += 1
             if t != []:
                 self.addTrajectory(t)
@@ -213,70 +213,74 @@ class Trajectories:
         elif nb_dimensions == 3:
             from mpl_toolkits.mplot3d import Axes3D
             fig = plt.figure()
-            ax = fig.gca(projection="3d")
+            #ax = fig.gca(projection="3d")
+            ax = plt.axes(projection="3d")
             if clusters is not None:
                 for i in range(len(self.trajectories)):
-                    ax.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
+                    ax.plot3D(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
             else:
                 for trajectory in self.trajectories:
-                    ax.plot(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
+                    ax.plot3D(trajectory[:, 0], trajectory[:, 1], trajectory[:, 2])
         if clusters is not None and verbose:
             print(colors)
             print(clusters)
             for i in range(len(self.trajectories)):
                 print(f"plotting line {i} with color {colors[clusters[i]]}")
-                 #x, y
-        plt.xlabel("x")
-        plt.ylabel("y")
+
         plt.show()
 
-    def show2DTrajectoriesSeparately(self, clusters = None, verbose = False):
-        # Initializing the function
+    def showTrajectoriesSeparately(self, clusters = None, verbose = False):
+        # Utilities
+        nb_trajectories = len(self.trajectories)
+        nb_dimensions = self.trajectories[0].shape[1]
+        #nb_dimensions = 2
+
+        # Initialize the plot object and its color set
         import matplotlib.pyplot as plt
         prop_cycle = plt.rcParams['axes.prop_cycle']
         colors = prop_cycle.by_key()['color']
-        # Finding the different types of layouts and the number of occurences
-        layouts_got = []
-        layouts_nb = []
-        for l in self.layouts:
-            for i in range(len(layouts_got)):
-                if layouts_got[i] == l:
-                    layouts_nb[i] += 1
-            if l not in layouts_got:
-                layouts_got.append(l)
-                layouts_nb.append(1)
-        # Printing the number of each layouts
-        if verbose:
-            for i in range(len(layouts_got)):
-                print(f"Layout {layouts_got[i]} found {layouts_nb[i]} times")
-            print(layouts_got)
-            print(layouts_nb)
-        # Showing the trajectories
-        fig, axs = plt.subplots(max(layouts_nb), len(layouts_got), sharex=True, sharey=True)
-        layouts_i = []
-        for i in range(len(layouts_got)):
-            layouts_i.append(0)
 
-        for i in range(len(self.trajectories)):
-            l = 0
-            for j in range(len(layouts_got)):
-                if self.layouts[i] == layouts_got[j]:
-                    l = j
-                    break
-            if clusters is not None:
-                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
-                axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}, cluster {clusters[i]}")
-            else:
-                axs[layouts_i[l], l].plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1])
-                axs[layouts_i[l], l].set_title(f"Trajectory #{i+1}, layout {layouts_got[l]}")
-            layouts_i[l] += 1
+        # Find the different types of layouts and their number of occurences
+        layout_types = list(set(self.layouts)) # erase all duplicates from self.layouts
+        from collections import Counter
+        layout_types_counter = Counter(self.layouts)
+        if verbose:
+            # Print the number of each layouts
+            for i in range(len(layout_types)):
+                print(f"Layout \"{layout_types[i]}\" found {layout_types_counter[layout_types[i]]} times")
+        nb_columns = max(layout_types_counter.values())
+        nb_rows = len(layout_types)
+
+        def findLayoutTypeIndex(trajectory_index):
+            for i in range(len(layout_types)):
+                if self.layouts[trajectory_index] == layout_types[i]:
+                    return i
+            return 0
+
+        # Display the trajectories
+        fig = plt.figure()
+        if clusters is None:
+            clusters = np.zeros(nb_trajectories, dtype=int) # same color for every trajectory
+        for i in range(nb_trajectories):
+            layout_type_index = findLayoutTypeIndex(i)
+            index = layout_type_index * nb_columns + (nb_columns - layout_types_counter[layout_types[layout_type_index]]) + 1
+            layout_types_counter[layout_types[layout_type_index]] -= 1
+            if nb_dimensions == 2:
+                subplot = fig.add_subplot(nb_rows, nb_columns, index)
+                subplot.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
+                subplot.set_title(f"#{i + 1}, {self.layouts[i]}")
+            elif nb_dimensions == 3:
+                subplot = fig.add_subplot(nb_rows, nb_columns, index, projection = "3d")
+                subplot.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
+                subplot.set_title(f"#{i + 1}, {self.layouts[i]}")
 
         plt.show()
 
-    def completeDisplay(self):
-        self.getTrajectoriesDistances(verbose=True)
+    def completeDisplay(self, clusters = None):
+        self.getTrajectoriesDistances(verbose = True)
         self.printTrajectories()
         self.showTrajectories()
+        self.showTrajectoriesSeparately(clusters = clusters, verbose = True)
 
     ## Different heuristics to compute distance between two trajectories
     # Distance between the points p1 and p2
@@ -284,7 +288,7 @@ class Trajectories:
         return np.sqrt(np.sum(np.square(p1 - p2)))
 
     # Means the squares of the distance between points of the same the same index in the two trajectories
-    def heuristic0(self, t1, t2, translation=False, verbose=False):
+    def heuristic0(self, t1, t2, translation = False, verbose = False):
         size = min(t1.shape[0], t2.shape[0])
 
         deltat1 = None

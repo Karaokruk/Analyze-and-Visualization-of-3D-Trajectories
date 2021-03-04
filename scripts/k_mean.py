@@ -7,29 +7,36 @@ import matplotlib.pyplot as plt
 import random
 
 # Get random trajectories
-def initializationFromTrajectories(size, traj, per_layouts = False, per_layouts_randomization = False):
+def initializationFromTrajectories(size, traj, per_layout=False, per_layout_randomization=False, verbose=False):
     print("Initializing kmeans...")
     kmeans = Trajectories()
     # Initializing our kmeans randomly
-    if not per_layouts:
+    if not per_layout:
         sample = random.sample(traj.trajectories, size)
+        def offsetTrajectory(t, min_offset=-0.1, max_offset=0.1):
+            new_t = []
+            for p in t:
+                new_t.append(p + (np.random.uniform(min_offset, max_offset)))
+            return new_t
         for t in sample:
-            kmeans.addTrajectory(t)
-    # Initialization using one random trajectory per layouts
+            kmeans.addTrajectory(offsetTrajectory(t))
+    # Initialization using one random trajectory per layout
     # NOT RANDOM
     else:
         layouts_got = []
-        if per_layouts_randomization:
+        if per_layout_randomization:
             indexes = list(range(0, len(traj.layouts)))
             random.shuffle(indexes)
             for i in indexes:
                 if traj.layouts[i] not in layouts_got:
                     kmeans.addTrajectory(traj.trajectories[i])
                     layouts_got.append(traj.layouts[i])
-                    print(f"Layout type : {traj.layouts[i]}")
+                    if verbose:
+                        print(f"Layout type : {traj.layouts[i]}")
         else:
             for i in range(len(traj.layouts)):
-                print(f"Length : {len(traj.trajectories)}, layouts : {len(traj.layouts)}, i : {i}")
+                if verbose:
+                    print(f"Length : {len(traj.trajectories)}, layouts : {len(traj.layouts)}, i : {i}")
                 if traj.layouts[i] not in layouts_got:
                     kmeans.addTrajectory(traj.trajectories[i])
                     layouts_got.append(traj.layouts[i])
@@ -41,7 +48,7 @@ def assignment(kmeans, traj):
     for t in traj.trajectories:
         y_hat = []
         for k in kmeans.trajectories:
-            y_hat.append(Trajectories.trajectoryDistance(traj, t, k, heuristic = 0))
+            y_hat.append(Trajectories.trajectoryDistance(traj, t, k, heuristic=0))
         assign.append(np.argmin(y_hat))
     return assign
 
@@ -61,21 +68,21 @@ def update(kmeans, traj, assign):
     diff = np.sum(np.absolute(kmeans.trajectories - sums))
     return sums, diff
 
-def kmean(k, traj, nb_iter = 10, method = 2):
+def kmean(k, traj, nb_iter=10, method=2):
     print("\n-- K-MEAN CLUSTERING --\n")
 
+    #traj.showTrajectories()
     workingTraj = None
     if method == 2:
         workingTraj = traj.vectorizedTrajectories()
     elif method == 1:
         workingTraj = traj.translatedTrajectories()
-
     else:
         workingTraj = traj
     workingTraj.layouts = traj.layouts
 
-    m = initializationFromTrajectories(k, workingTraj, per_layouts=True, per_layouts_randomization=False)
-    print("Done.\n")
+    m = initializationFromTrajectories(k, workingTraj, per_layout = False, per_layout_randomization = False, verbose = True)
+    print("Initialization done.\n")
     for i in range(nb_iter):
         print(f"Iteration {i}.")
         a = assignment(m, workingTraj)
@@ -90,9 +97,10 @@ def kmean(k, traj, nb_iter = 10, method = 2):
         m = m.trajectoriesFromVectors()
     #m.showTrajectories()
     #traj.show2DTrajectoriesSeparately(clusters = a)
-    workingTraj.show2DTrajectoriesSeparately(verbose = False, clusters = a)
+    #workingTraj.show2DTrajectoriesSeparately(verbose = True, clusters = a)
+    workingTraj.showTrajectoriesSeparately(verbose = True, clusters = a)
 
-def kmean_opencv(traj, k=2, nb_iter=10):
+def kmean_opencv(traj, k = 2, nb_iter = 10):
     print("\n-- OPENCV K-MEAN CLUSTERING --\n")
     import cv2 as cv
 
@@ -105,9 +113,9 @@ def kmean_opencv(traj, k=2, nb_iter=10):
     for l in label:
         a.append(l[0])
 
-    traj.show2DTrajectoriesSeparately(clusters=a)
+    traj.show2DTrajectoriesSeparately(clusters = a)
 
-traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv", verbose = False)
-#kmean(round(len(traj.trajectories)/3), traj, nb_iter=20, method = 2)
-#kmean(3, traj, method=0)
-kmean_opencv(traj, k=3, nb_iter=10)
+traj = createCSVTrajectories("../datapoints/SmallMultipleVR_Study/Study 2/Participant_7_HeadPositionLog.csv", verbose=False)
+#kmean(round(len(traj.trajectories)/3), traj, nb_iter = 20, method = 2)
+kmean(3, traj, method = 1)
+#kmean_opencv(traj, k = 3, nb_iter = 10)
