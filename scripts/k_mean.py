@@ -104,7 +104,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
     workingTraj.layouts = traj.layouts
 
     # K-mean Initialization
-    m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = True, verbose = True)
+    m = initializationFromTrajectories(k, workingTraj, per_layout = False, per_layout_randomization = False, verbose = True)
     print("\n-- Initialization done. --\n")
 
     # K-mean Assigment & Update
@@ -128,7 +128,6 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
     if method == 2:
         m = m.trajectoriesFromVectors()
 
-
     if verbose:
         nbPerCluster = np.zeros(len(m.trajectories), dtype = int)
         for i in a:
@@ -136,7 +135,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
         print(f"Number of trajectories per clusters : {nbPerCluster}")
     m.showTrajectories()
     traj.showTrajectories(a)
-    workingTraj.showTrajectoriesSeparately(verbose = True, clusters = a)
+    traj.showTrajectoriesSeparately(verbose = True, clusters = a)
 
 def kmean_opencv(traj, k = 3, nb_iter = 10):
     print("\n-- OPENCV K-MEAN CLUSTERING --\n")
