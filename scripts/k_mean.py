@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import random
 
 # Get random trajectories
-def initializationFromTrajectories(size, traj, per_layout = False, per_layout_randomization = False, verbose = False):
+def initializationFromTrajectories(size, traj, per_layout = False, per_layout_randomization = True, verbose = False):
     print("Initializing kmeans...")
     kmeans = Trajectories()
     # Initializing our kmeans randomly
@@ -156,7 +156,7 @@ def kmean_opencv(traj, k = 3, nb_iter = 10):
 
     return a
 
-traj = createCSVTrajectories("../datapoints/SmallMultipleVR_Study/Study 2/Participant_7_HeadPositionLog.csv", verbose = False)
+#traj = createCSVTrajectories("../datapoints/SmallMultipleVR_Study/Study 2/Participant_7_HeadPositionLog.csv", verbose = False)
 #kmean(round(len(traj.trajectories)/3), traj, nb_iter = 20, method = 2)
-kmean(traj, k = 3, method = 1, verbose = True)
+#kmean(traj, k = 3, method = 1, verbose = True)
 #kmean_opencv(traj, k = 3, nb_iter = 10)
