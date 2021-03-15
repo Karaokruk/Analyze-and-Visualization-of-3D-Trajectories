@@ -31,7 +31,7 @@ for i in range(trajLen):
 
 
 traj.attuneTrajectories(0.98, 0)
-a = kmean(traj, k = 3, method = 1, verbose = False)
+a, t = kmean(traj, k = 3, method = 1, verbose = False)
 
 s.send(str(a).encode())
 r = s.recv(9999999)

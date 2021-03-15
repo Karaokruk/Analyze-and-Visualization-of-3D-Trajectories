@@ -105,7 +105,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
     workingTraj.layouts = traj.layouts
 
     # K-mean Initialization
-    m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = True, verbose = verbose)
+    m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = False, verbose = verbose)
     print("\n-- Initialization done. --\n")
 
     # K-mean Assigment & Update
@@ -137,7 +137,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
         m.showTrajectories()
         traj.showTrajectories(a)
         workingTraj.showTrajectoriesSeparately(verbose = True, clusters = a)
-    return a
+    return a, workingTraj
 
 def kmean_opencv(traj, k = 3, nb_iter = 10):
     print("\n-- OPENCV K-MEAN CLUSTERING --\n")
@@ -156,7 +156,7 @@ def kmean_opencv(traj, k = 3, nb_iter = 10):
 
     return a
 
-#traj = createCSVTrajectories("../datapoints/SmallMultipleVR_Study/Study 2/Participant_7_HeadPositionLog.csv", verbose = False)
+traj = createCSVTrajectories("../datapoints/SmallMultipleVR_Study/Study 2/Participant_7_HeadPositionLog.csv", verbose = False)
 #kmean(round(len(traj.trajectories)/3), traj, nb_iter = 20, method = 2)
-#kmean(traj, k = 3, method = 1, verbose = True)
+kmean(traj, k = 3, method = 1, verbose = True)
 #kmean_opencv(traj, k = 3, nb_iter = 10)
