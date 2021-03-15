@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import random
 
 # Get random trajectories
-def initializationFromTrajectories(size, traj, per_layout = False, per_layout_randomization = False, verbose = False):
+def initializationFromTrajectories(size, traj, per_layout = False, per_layout_randomization = True, verbose = False):
     print("Initializing kmeans...")
     kmeans = Trajectories()
     # Initializing our kmeans randomly
@@ -105,7 +105,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
     workingTraj.layouts = traj.layouts
 
     # K-mean Initialization
-    m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = True, verbose = verbose)
+    m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = False, verbose = verbose)
     print("\n-- Initialization done. --\n")
 
     # K-mean Assigment & Update
@@ -137,7 +137,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
         m.showTrajectories()
         traj.showTrajectories(a)
         workingTraj.showTrajectoriesSeparately(verbose = True, clusters = a)
-    return a
+    return a, workingTraj
 
 def kmean_opencv(traj, k = 3, nb_iter = 10):
     print("\n-- OPENCV K-MEAN CLUSTERING --\n")
