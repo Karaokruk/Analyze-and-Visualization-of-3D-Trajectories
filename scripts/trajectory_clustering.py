@@ -161,7 +161,7 @@ class Trajectories:
         # One file per trajectories
         if write_method == 0:
             for i in range(len(self.trajectories)):
-                filename = 'traj' + str(nb_files) + 'method' + str(write_method) + '.csv'
+                filename = 'method' + str(write_method) + 'traj' + str(nb_files) + '.csv'
                 with open(filename, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                     writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
@@ -171,18 +171,18 @@ class Trajectories:
         # One file per cluster
         if write_method == 1:
             for i in range(k):
-                for j in range(len(self.trajectories)):
-                    if a[j] == i:
-                        filename = 'minimizedTrajectories/traj' + str(i) + 'method' + str(write_method) + '.csv'
-                        with open(filename, 'w') as csvfile:
-                            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
-                            writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
-                            for l in range(len(self.trajectories[j])):
-                                writer.writerow([j, self.trajectories[l][0], self.trajectories[l][1], self.trajectories[l][2]])
-                        nb_files += 1
+                filename = 'method' + str(write_method) + 'traj' + str(i) + '.csv'
+                with open(filename, 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                    writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                    for j in range(len(self.trajectories)):
+                        if a[j] == i:
+                                for l in range(len(self.trajectories[j])):
+                                    writer.writerow([j, self.trajectories[j][l][0], self.trajectories[j][l][1], self.trajectories[j][l][2]])
+                    nb_files += 1
         # One file
         if write_method == 2:
-            filename = 'trajmethod' + str(write_method) + '.csv'
+            filename = 'method' + str(write_method) + '.csv'
             with open(filename, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                 writer.writerow(["TrajectoryID", "x", "y", "z"])
