@@ -263,6 +263,7 @@ class Trajectories:
 
         # Display the trajectories
         fig = plt.figure()
+        reference_subplot = None
         if clusters is None:
             clusters = np.zeros(nb_trajectories, dtype=int) # same color for every trajectory
         for i in range(nb_trajectories):
@@ -270,13 +271,15 @@ class Trajectories:
             index = layout_type_index * nb_columns + (nb_columns - layout_types_counter[layout_types[layout_type_index]]) + 1
             layout_types_counter[layout_types[layout_type_index]] -= 1
             if nb_dimensions == 2:
-                subplot = fig.add_subplot(nb_rows, nb_columns, index)
+                subplot = fig.add_subplot(nb_rows, nb_columns, index, sharex = reference_subplot, sharey = reference_subplot)
                 subplot.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], color = colors[clusters[i]])
                 subplot.set_title(f"#{i + 1}, {self.layouts[i]}")
             elif nb_dimensions == 3:
-                subplot = fig.add_subplot(nb_rows, nb_columns, index, projection = "3d")
+                subplot = fig.add_subplot(nb_rows, nb_columns, index, projection = "3d", sharex = reference_subplot, sharey = reference_subplot, sharez = reference_subplot)
                 subplot.plot(self.trajectories[i][:, 0], self.trajectories[i][:, 1], self.trajectories[i][:, 2], color = colors[clusters[i]])
                 subplot.set_title(f"#{i + 1}, {self.layouts[i]}")
+                if i == 0:
+                    reference_subplot = subplot
 
         plt.show()
 
