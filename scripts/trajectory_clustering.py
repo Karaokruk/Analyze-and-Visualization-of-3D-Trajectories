@@ -129,6 +129,53 @@ class Trajectories:
             if verbose:
                 print(f"Processed {line_count} lines.")
 
+    def trajectoriesToCsv(self, write_method = 0, k = None, a = None):
+        nb_files = 0
+
+        # Handling errors
+        if write_method < 0 and write_method > 2:
+            print("Warning in trajectoriesToCsv : method number does not correspond to an actuel method. Getting back to method 0.")
+            write_method = 0
+        if write_method == 1 and a == None:
+            print("Error in trajectoriesToCsv : method 1 selected but no assignment list given.")
+            return -1
+        if write_method == 1 and k == None:
+            print("Warning in trajectoriesToCsv : method 1 selected but no k given.")
+            k = input("Please enter the number of k : >")
+
+        # One file per trajectories
+        if write_method == 0:
+            for i in range(len(traj.trajectories)):
+                filename = 'traj' + str(nb_files) + 'method' + str(write_method) + '.csv'
+                with open(filename, 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                    writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                    for j in range(len(traj.trajectories[i])):
+                        writer.writerow([i, traj.trajectories[i][j][0], traj.trajectories[i][j][1], traj.trajectories[i][j][2]])
+                nb_files += 1
+        # One file per cluster
+        if write_method == 1:
+            for i in range(k):
+                for j in range(len(traj.trajectories)):
+                    if a[j] == i:
+                        filename = 'minimizedTrajectories/traj' + str(i) + 'method' + str(write_method) + '.csv'
+                        with open(filename, 'w') as csvfile:
+                            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                            writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                            for l in range(len(traj.trajectories[j])):
+                                writer.writerow([j, traj.trajectories[l][0], traj.trajectories[l][1], traj.trajectories[l][2]])
+                        nb_files += 1
+        # One file
+        if write_method == 2:
+            filename = 'trajmethod' + str(write_method) + '.csv'
+            with open(filename, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                writer.writerow(["TrajectoryID", "x", "y", "z"])
+                for i in range(len(traj.trajectories)):
+                    for j in range(len(traj.trajectories[i])):
+                        writer.writerow([i, traj.trajectories[i][j][0], traj.trajectories[i][j][1], traj.trajectories[i][j][2]])
+
+        return nb_files
 
     def getTrajectory(self, id):
         return self.trajectories[id]
@@ -409,11 +456,10 @@ def createCSVTrajectories(file, verbose = False):
         csv_trajectories.showTrajectories()
     return csv_trajectories
 
-#createSimilarTrajectories(minimize = True)
-#createRandomTrajectories(nb_trajectories = 3, minimize = True)
-#createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
-traj = Trajectories()
-for i in range(1,5):
-    traj.addTrajectoriesFromCsv("../datapoints/Participant_7_HeadPositionLog.csv", groupBy= "Trial", groupID= "2")
-print(len(traj.trajectories))
-print(traj.trajectories[0])
+#traj = Trajectories()
+#for i in range(1,5):
+#    traj.addTrajectoriesFromCsv("../datapoints/Participant_7_HeadPositionLog.csv", groupBy= "Trial", groupID= "2")
+#print(len(traj.trajectories))
+#print(traj.trajectories[0])
+traj = createCSVTrajectories("../datapoints/Participant_7_HeadPositionLog.csv", verbose = False)
+traj.trajectoriesToCsv(write_method=1)
