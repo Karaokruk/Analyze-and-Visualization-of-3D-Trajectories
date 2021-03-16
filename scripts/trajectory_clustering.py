@@ -306,7 +306,7 @@ class Trajectories:
 
         distance = 0
         for i in range(size):
-            distance += self.pointDistance(t1[i], deltat2[i]) ** 2
+            distance += self.pointDistance(deltat1[i], deltat2[i]) ** 2
         distance = np.sqrt(distance / size)
         if (verbose):
             print(f"Distance between trajectories : {distance}")
