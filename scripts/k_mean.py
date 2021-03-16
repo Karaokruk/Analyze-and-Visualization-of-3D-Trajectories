@@ -10,7 +10,7 @@ import random
 def initializationFromTrajectories(size, traj, per_layout = False, per_layout_randomization = True, verbose = False):
     print("Initializing kmeans...")
     kmeans = Trajectories()
-    # Initializing our kmeans randomly
+    # Initializing clusters randomly
     if not per_layout:
         sample = random.sample(traj.trajectories, size)
         def offsetTrajectory(t, min_offset = -0.1, max_offset = 0.1):
@@ -41,20 +41,25 @@ def initializationFromTrajectories(size, traj, per_layout = False, per_layout_ra
                     layout_types.append(traj.layouts[i])
     return kmeans
 
+# Returns the assigned cluster for each trajectory
 def getAssignmentFromResponsibility(responsibility):
     assign = []
     for t in responsibility.T:
         assign.append(np.argmax(t))
     return assign
 
+
 # At each step, assign each trajectories to a cluster
 def assignment(kmeans, traj):
     assign = []
+    # Find the closest cluster for each trajectory
     for t in traj.trajectories:
         y_hat = []
         for k in kmeans.trajectories:
             y_hat.append(Trajectories.trajectoryDistance(traj, t, k, heuristic = 0))
         assign.append(np.argmin(y_hat))
+
+    # Put the responsability value to 1 for the closest, 0 for the others
     responsibility = np.zeros((len(kmeans.trajectories), len(traj.trajectories)))
     for i in range(len(kmeans.trajectories)):
         for j in range(len(traj.trajectories)):
@@ -62,6 +67,9 @@ def assignment(kmeans, traj):
                 responsibility[i][j] = 1
     return responsibility
 
+
+# Alternative version of the assignment, where each trajectory takes a ratio of the responsablity for a cluster
+# Parameter beta is the stiffness, in [0, inf]. The higher it goes, the closer it will be to "hard" k-mean.
 def softAssignment(kmeans, traj, beta):
     responsibility = np.zeros((len(kmeans.trajectories), len(traj.trajectories)))
     for i in range(len(kmeans.trajectories)):
@@ -73,7 +81,7 @@ def softAssignment(kmeans, traj, beta):
         responsibility[i] /= total
     return responsibility
 
-# Update each k-mean trajectories depending on
+# Update each cluster trajectories to match the trajectories they are responsible of
 def update(kmeans, traj, responsibility):
     sums = np.zeros_like(kmeans.trajectories)
     cpts = np.zeros(len(sums))
@@ -90,29 +98,38 @@ def update(kmeans, traj, responsibility):
     diff = np.sum(np.absolute(kmeans.trajectories - sums))
     return sums, diff
 
-
-def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
-    print("\n-- Starting K-mean clustering --\n")
+# K-mean algorithm. Clusters trajectories that are more alike depending on different criterias.
+# Parameter k is the desired number of clusters.
+# Parameter method : in [0,2]. 0 is for the point by point euclidian distance, same for 1, but their share a common origin, and 2 is the vector by vector distance.
+# Parameter soft : wheter the soft alternative should be used or not.
+def kmean(traj, k = 3, nb_iter = 10, method = 2, soft = True, Beta = 1000, verbose = False):
+    if verbose:
+        print("\n-- Starting K-mean clustering --\n")
 
     # Initialize the working set of trajectories
     workingTraj = None
-    if method == 1:
+    if method == 0:
+        workingTraj = traj
+    elif method == 1:
         workingTraj = traj.translatedTrajectories()
     elif method == 2:
         workingTraj = traj.vectorizedTrajectories()
-    else:
-        workingTraj = traj
     workingTraj.layouts = traj.layouts
 
     # K-mean Initialization
     m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = False, verbose = verbose)
-    print("\n-- Initialization done. --\n")
+    if verbose:
+        print("\n-- Initialization done. --\n")
 
     # K-mean Assigment & Update
     for i in range(nb_iter):
         if verbose:
             print(f"Iteration {i}")
-        r = softAssignment(m, workingTraj, 1000)
+        r = None
+        if soft:
+            r = softAssignment(m, workingTraj, Beta)
+        else:
+            r = assignment(m, workingTraj)
         a = getAssignmentFromResponsibility(r)
         m.trajectories, diff = update(m, workingTraj, r)
         if diff == 0:
@@ -123,12 +140,12 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
             if verbose:
                 print(f"The update made a total difference of {diff} on this iteration.")
 
-    print("\n-- Ending K-mean clustering. --\n")
-
-    if method == 2:
-        m = m.trajectoriesFromVectors()
+    if verbose:
+        print("\n-- Ending K-mean clustering. --\n")
 
     if verbose:
+        if method == 2:
+            m = m.trajectoriesFromVectors()
         print("\n-- Displaying clusters and clustered trajectories. --\n")
         nbPerCluster = np.zeros(len(m.trajectories), dtype = int)
         for i in a:
@@ -139,6 +156,8 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
         workingTraj.showTrajectoriesSeparately(verbose = True, clusters = a)
     return a, workingTraj
 
+
+# K-mean algorithm imported from opencv
 def kmean_opencv(traj, k = 3, nb_iter = 10):
     print("\n-- OPENCV K-MEAN CLUSTERING --\n")
     import cv2 as cv
@@ -155,8 +174,3 @@ def kmean_opencv(traj, k = 3, nb_iter = 10):
     traj.show2DTrajectoriesSeparately(clusters = a)
 
     return a
-
-#traj = createCSVTrajectories("../datapoints/SmallMultipleVR_Study/Study 2/Participant_7_HeadPositionLog.csv", verbose = False)
-#kmean(round(len(traj.trajectories)/3), traj, nb_iter = 20, method = 2)
-#kmean(traj, k = 3, method = 1, verbose = True)
-#kmean_opencv(traj, k = 3, nb_iter = 10)

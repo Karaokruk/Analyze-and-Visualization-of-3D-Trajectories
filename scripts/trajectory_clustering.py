@@ -5,14 +5,17 @@ np.random.seed()
 
 class Trajectories:
 
-    def __init__(self):
+    def __init__(self, id = 0):
         self.trajectories = []
         self.layouts = []
+        self.user = []
 
     def copy(self):
         newTraj = Trajectories()
         for t in self.trajectories:
             newTraj.addTrajectory(t.copy())
+        for l in self.layouts:
+            newTraj.addLayout(l)
         return newTraj
 
     def translatedTrajectories(self):
@@ -50,20 +53,27 @@ class Trajectories:
     def addLayout(self, layout_type):
         self.layouts.append(layout_type)
 
-    def addTrajectoriesFromCsv(self, file, verbose = False):
+    def addUser(self, user):
+        self.user.append(user)
+
+    def addTrajectoriesFromCsv(self, file, groupBy = "None", groupID = 0, verbose = False):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
             t = []
             layout_type = []
-            x = y = z = state_id = trial_id = prev_trial_id = layout = -1
+            user = []
+            user_id = x = y = z = state_id = trial_id = task_id = prev_trial_id = layout = -1
+            group = None
             for row in csv_reader:
                 if line_count == 0:
                     if verbose:
                         print(f"Column names are {', '.join(row)}")
                     # Automatic version
                     for i in range(len(row)):
-                        if row[i] == "CameraPosition.x":
+                        if row[i] == "UserID":
+                            user_id = i
+                        elif row[i] == "CameraPosition.x":
                             x = i
                         elif row[i] == "CameraPosition.y":
                             y = i
@@ -73,11 +83,15 @@ class Trajectories:
                             state_id = i
                         elif row[i] == "TrialID":
                             trial_id = i
+                        elif row[i] == "TaskID":
+                            task_id = i
                         elif row[i] == "Layout":
                             layout = i
                     if verbose:
                         print(f"Before input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
-                    # If the col isn't found
+                    # If the colomn isn't found
+                    if user_id == -1:
+                        user_id = int(input("User ID index not found. Enter the column (index - 1) : "))
                     if x == -1:
                         x = int(input("Camera position X index not found. Enter the column (index - 1) : "))
                     if y == -1:
@@ -88,10 +102,20 @@ class Trajectories:
                         state_id = int(input("Trial state index not found. Enter the column (index - 1) : "))
                     if trial_id == -1:
                         trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
+                    if task_id == -1:
+                        task_id = int(input("Task ID index not found. Enter the column (index - 1) : "))
                     if layout == -1:
                         layout = int(input("Layout index not found. Enter the column (index - 1) : "))
                     if verbose:
-                        print(f"After input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
+                        print(f"After input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id}, task_id = {task_id} and trial_id = {trial_id} with layout {layout}")
+                    
+                    if groupBy == "Task":
+                        group = task_id
+                    elif groupBy == "Trial":
+                        group = trial_id
+                    elif groupBy == "Layout":
+                        group = layout
+
                 else:
                     if row[trial_id] != prev_trial_id and t != [] and prev_trial_id != -1:
                         self.addTrajectory(t)
@@ -99,9 +123,15 @@ class Trajectories:
                         if layout_type != []:
                             self.addLayout(layout_type[0])
                             layout_type = []
-                    if row[state_id] == "OnTask":
+                        if user != []:
+                            self.addUser(user[0])
+                            user = []
+
+                    if row[state_id] == "OnTask" and (groupBy == "None" or row[group] == groupID):
                         if layout_type == []:
                             layout_type.append(row[layout])
+                        if user == []:
+                            user.append(row[user_id])
                         prev_trial_id = row[trial_id]
                         t.append([float(row[x]), float(row[y]), float(row[z])]) # 3d
                         #t.append([float(row[x]), float(row[z])]) # 2d
@@ -114,6 +144,53 @@ class Trajectories:
             if verbose:
                 print(f"Processed {line_count} lines.")
 
+    def trajectoriesToCsv(self, write_method = 0, k = None, a = None):
+        nb_files = 0
+
+        # Handling errors
+        if write_method < 0 and write_method > 2:
+            print("Warning in trajectoriesToCsv : method number does not correspond to an actuel method. Getting back to method 0.")
+            write_method = 0
+        if write_method == 1 and a == None:
+            print("Error in trajectoriesToCsv : method 1 selected but no assignment list given.")
+            return -1
+        if write_method == 1 and k == None:
+            print("Warning in trajectoriesToCsv : method 1 selected but no k given.")
+            k = input("Please enter the number of k : >")
+
+        # One file per trajectories
+        if write_method == 0:
+            for i in range(len(self.trajectories)):
+                filename = 'method' + str(write_method) + 'traj' + str(nb_files) + '.csv'
+                with open(filename, 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                    writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                    for j in range(len(self.trajectories[i])):
+                        writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
+                nb_files += 1
+        # One file per cluster
+        if write_method == 1:
+            for i in range(k):
+                filename = 'method' + str(write_method) + 'traj' + str(i) + '.csv'
+                with open(filename, 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                    writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                    for j in range(len(self.trajectories)):
+                        if a[j] == i:
+                                for l in range(len(self.trajectories[j])):
+                                    writer.writerow([j, self.trajectories[j][l][0], self.trajectories[j][l][1], self.trajectories[j][l][2]])
+                    nb_files += 1
+        # One file
+        if write_method == 2:
+            filename = 'method' + str(write_method) + '.csv'
+            with open(filename, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+                writer.writerow(["TrajectoryID", "x", "y", "z"])
+                for i in range(len(self.trajectories)):
+                    for j in range(len(self.trajectories[i])):
+                        writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
+
+        return nb_files
 
     def getTrajectory(self, id):
         return self.trajectories[id]
@@ -121,6 +198,7 @@ class Trajectories:
     # Make all trajectories the same length
     def attuneTrajectories(self, ratio, limit, verbose = False):
 
+        # Method to put away the points that don't change the xyz direction of the trajectory
         def minimizedTrajectory0(trajectory):
             minimized = []
 
@@ -144,6 +222,8 @@ class Trajectories:
             minimized.append(trajectory[len(trajectory) - 1])
             return np.array(minimized)
 
+        # Method to put away the points that don't change the global distance of the trajectory very much.
+        # Can be (and should be) called multiple times.
         def minimizedTrajectory1(trajectory, ratio, limit):
             tmpTraj = trajectory
             i = 0
@@ -157,10 +237,12 @@ class Trajectories:
                 limit = len(tmpTraj)
                 if verbose:
                     print(f"Limit is now {limit}")
-            # print(f"{cpt} points have been removed")
-            # print(f"{len(trajectory)} points remaining")
+            if verbose:
+                print(f"{cpt} points have been removed")
+                print(f"{len(trajectory)} points remaining")
             return tmpTraj, limit, cpt
 
+        # Allows to find the trajectory that has the largest number of points, among those that are not equal to the limit.
         def findTrajectoryToIter(trajectories, limit):
             id = 0
             size = len(trajectories[0])
@@ -170,13 +252,14 @@ class Trajectories:
                     id = i
             return id, size
 
-        removed = -1
         toMinimize = self.trajectories.copy()
         while True:
             id, size = findTrajectoryToIter(toMinimize, limit)
-            if size == limit:
+            if size == limit: # each trajectory has a size equal to the limit, the minimization is over.
                 break
+
             toMinimize[id], limit, removed = minimizedTrajectory1(toMinimize[id], ratio, limit)
+
             if removed == 0:
                 if len(toMinimize[id]) < limit:
                     if len(self.trajectories[id]) < limit:
@@ -192,7 +275,6 @@ class Trajectories:
         print("-- Trajectories --")
         for i in range(len(self.trajectories)):
             print(f"Trajectory #{i} :\n{self.trajectories[i]}")
-
 
     def printLayouts(self):
         print("-- Layout types --")
@@ -309,7 +391,7 @@ class Trajectories:
 
         distance = 0
         for i in range(size):
-            distance += self.pointDistance(t1[i], deltat2[i]) ** 2
+            distance += self.pointDistance(deltat1[i], deltat2[i]) ** 2
         distance = np.sqrt(distance / size)
         if (verbose):
             print(f"Distance between trajectories : {distance}")
@@ -392,7 +474,3 @@ def createCSVTrajectories(file, verbose = False):
         csv_trajectories.printTrajectories()
         csv_trajectories.showTrajectories()
     return csv_trajectories
-
-#createSimilarTrajectories(minimize = True)
-#createRandomTrajectories(nb_trajectories = 3, minimize = True)
-#createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
