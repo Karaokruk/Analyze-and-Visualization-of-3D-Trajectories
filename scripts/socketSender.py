@@ -23,7 +23,7 @@ for i in range(trajLen):
     trajDir = s.recv(9999999)
     trajDir = trajDir.decode("utf8")
 
-    traj.addTrajectoriesFromCsv(trajDir)
+    traj.addTrajectoriesFromCsv(trajDir, groupBy = "Trial", groupID = 2)
 
     message = "Python : loaded file " + str(trajDir)
     s.send(message.encode())

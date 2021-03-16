@@ -91,17 +91,17 @@ def update(kmeans, traj, responsibility):
     return sums, diff
 
 
-def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
+def kmean(traj, k = 3, nb_iter = 10, method = 2, soft = True, Beta = 1000, verbose = False):
     print("\n-- Starting K-mean clustering --\n")
 
     # Initialize the working set of trajectories
     workingTraj = None
-    if method == 1:
+    if method == 0:
+        workingTraj = traj
+    elif method == 1:
         workingTraj = traj.translatedTrajectories()
     elif method == 2:
         workingTraj = traj.vectorizedTrajectories()
-    else:
-        workingTraj = traj
     workingTraj.layouts = traj.layouts
 
     # K-mean Initialization
@@ -112,7 +112,11 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
     for i in range(nb_iter):
         if verbose:
             print(f"Iteration {i}")
-        r = softAssignment(m, workingTraj, 1000)
+        r = None
+        if soft:
+            r = softAssignment(m, workingTraj, Beta)
+        else:
+            r = assignment(m, workingTraj)
         a = getAssignmentFromResponsibility(r)
         m.trajectories, diff = update(m, workingTraj, r)
         if diff == 0:
@@ -125,10 +129,9 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, verbose = False):
 
     print("\n-- Ending K-mean clustering. --\n")
 
-    if method == 2:
-        m = m.trajectoriesFromVectors()
-
     if verbose:
+        if method == 2:
+            m = m.trajectoriesFromVectors()
         print("\n-- Displaying clusters and clustered trajectories. --\n")
         nbPerCluster = np.zeros(len(m.trajectories), dtype = int)
         for i in a:

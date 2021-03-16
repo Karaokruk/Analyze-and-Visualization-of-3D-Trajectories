@@ -50,13 +50,14 @@ class Trajectories:
     def addLayout(self, layout_type):
         self.layouts.append(layout_type)
 
-    def addTrajectoriesFromCsv(self, file, verbose = False):
+    def addTrajectoriesFromCsv(self, file, groupBy = "None", groupID = 0, verbose = False):
         with open(file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter = ',')
             line_count = 0
             t = []
             layout_type = []
-            x = y = z = state_id = trial_id = prev_trial_id = layout = -1
+            x = y = z = state_id = trial_id = task_id = prev_trial_id = layout = -1
+            group = None
             for row in csv_reader:
                 if line_count == 0:
                     if verbose:
@@ -73,6 +74,8 @@ class Trajectories:
                             state_id = i
                         elif row[i] == "TrialID":
                             trial_id = i
+                        elif row[i] == "TaskID":
+                            task_id = i
                         elif row[i] == "Layout":
                             layout = i
                     if verbose:
@@ -88,10 +91,21 @@ class Trajectories:
                         state_id = int(input("Trial state index not found. Enter the column (index - 1) : "))
                     if trial_id == -1:
                         trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
+                    if task_id == -1:
+                        task_id = int(input("Task ID index not found. Enter the column (index - 1) : "))
                     if layout == -1:
                         layout = int(input("Layout index not found. Enter the column (index - 1) : "))
                     if verbose:
                         print(f"After input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
+                    
+
+                    if groupBy == "Task":
+                        group = task_id
+                    elif groupBy == "Trial":
+                        group = trial_id
+                    elif groupBy == "Layout":
+                        group = layout
+
                 else:
                     if row[trial_id] != prev_trial_id and t != [] and prev_trial_id != -1:
                         self.addTrajectory(t)
@@ -99,7 +113,8 @@ class Trajectories:
                         if layout_type != []:
                             self.addLayout(layout_type[0])
                             layout_type = []
-                    if row[state_id] == "OnTask":
+
+                    if row[state_id] == "OnTask" and (groupBy == "None" or row[group] == groupID):
                         if layout_type == []:
                             layout_type.append(row[layout])
                         prev_trial_id = row[trial_id]
@@ -157,8 +172,9 @@ class Trajectories:
                 limit = len(tmpTraj)
                 if verbose:
                     print(f"Limit is now {limit}")
-            # print(f"{cpt} points have been removed")
-            # print(f"{len(trajectory)} points remaining")
+            if verbose:
+                print(f"{cpt} points have been removed")
+                print(f"{len(trajectory)} points remaining")
             return tmpTraj, limit, cpt
 
         def findTrajectoryToIter(trajectories, limit):
@@ -396,3 +412,8 @@ def createCSVTrajectories(file, verbose = False):
 #createSimilarTrajectories(minimize = True)
 #createRandomTrajectories(nb_trajectories = 3, minimize = True)
 #createCSVTrajectories("../datapoints/participant7trial1-ontask.csv")
+traj = Trajectories()
+for i in range(1,5):
+    traj.addTrajectoriesFromCsv("../datapoints/Participant_7_HeadPositionLog.csv", groupBy= "Trial", groupID= "2")
+print(len(traj.trajectories))
+print(traj.trajectories[0])
