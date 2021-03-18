@@ -1,5 +1,6 @@
 import numpy as np
 import csv
+import os
 
 np.random.seed()
 
@@ -146,6 +147,7 @@ class Trajectories:
 
     def trajectoriesToCsv(self, write_method = 0, k = None, a = None):
         nb_files = 0
+        file_names = []
 
         # Handling errors
         if write_method < 0 and write_method > 2:
@@ -158,20 +160,26 @@ class Trajectories:
             print("Warning in trajectoriesToCsv : method 1 selected but no k given.")
             k = input("Please enter the number of k : >")
 
+        unity_dir = os.getcwd() + "/../Unity-Analyze-and-Visualization-of-3D-Trajectories/Assets/Resources/Datasets/MinTrajectories/"
+        if not os.path.exists(unity_dir):
+            print("Minimized trajectories directory does not exist. Creating it...")
+            os.mkdir(unity_dir)
+
         # One file per trajectories
         if write_method == 0:
             for i in range(len(self.trajectories)):
-                filename = 'method' + str(write_method) + 'traj' + str(nb_files) + '.csv'
+                filename = unity_dir + 'method' + str(write_method) + 'traj' + str(nb_files) + '.csv'
                 with open(filename, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                     writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
                     for j in range(len(self.trajectories[i])):
                         writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
                 nb_files += 1
+                file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(nb_files))
         # One file per cluster
         if write_method == 1:
             for i in range(k):
-                filename = 'method' + str(write_method) + 'traj' + str(i) + '.csv'
+                filename = unity_dir + 'method' + str(write_method) + 'traj' + str(i) + '.csv'
                 with open(filename, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                     writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
@@ -180,17 +188,19 @@ class Trajectories:
                                 for l in range(len(self.trajectories[j])):
                                     writer.writerow([j, self.trajectories[j][l][0], self.trajectories[j][l][1], self.trajectories[j][l][2]])
                     nb_files += 1
+                    file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(i))
         # One file
         if write_method == 2:
-            filename = 'method' + str(write_method) + '.csv'
+            filename = unity_dir + 'method' + str(write_method) + '.csv'
             with open(filename, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                 writer.writerow(["TrajectoryID", "x", "y", "z"])
                 for i in range(len(self.trajectories)):
                     for j in range(len(self.trajectories[i])):
                         writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
+            file_names.append("Datasets/MinTrajectories/method" + str(write_method))
 
-        return nb_files
+        return nb_files, file_names
 
     def getTrajectory(self, id):
         return self.trajectories[id]
@@ -299,7 +309,6 @@ class Trajectories:
         elif nb_dimensions == 3:
             from mpl_toolkits.mplot3d import Axes3D
             fig = plt.figure()
-            #ax = fig.gca(projection="3d")
             ax = plt.axes(projection="3d")
             if clusters is not None:
                 for i in range(len(self.trajectories)):
@@ -319,7 +328,6 @@ class Trajectories:
         # Utilities
         nb_trajectories = len(self.trajectories)
         nb_dimensions = self.trajectories[0].shape[1]
-        #nb_dimensions = 2
 
         # Initialize the plot object and its color set
         import matplotlib.pyplot as plt
@@ -450,8 +458,6 @@ def createSimilarTrajectories(minimize = False):
 def createRandomTrajectories(nb_trajectories = 10, nb_points = 10, minimize = False):
     random_trajectories = Trajectories()
 
-    #t0 = [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]]
-    #random_trajectories.addTrajectory(t0)
     for _ in range(nb_trajectories - 1):
         random_trajectories.addRandomTrajectory(nbPoints = nb_points)
 
