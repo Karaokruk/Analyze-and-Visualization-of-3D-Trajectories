@@ -22,10 +22,19 @@ def getMessageFromUnity(message, boolean=False):
     return val
 
 # Sends a message to Unity and waits for Unity to send back a message
-def sendMessageToUnity(message):
-    s.send(str(message).encode())
-    r = s.recv(9999999)
-    print(r.decode("utf8"))
+def sendMessageToUnity(message, size):
+    begin_i = 0
+    str_message = str(message)
+    while True:
+        end_i = begin_i + size
+        if end_i > len(str_message):
+            end_i = len(str_message)
+        s.send(str_message[begin_i:end_i].encode())
+        begin_i += size
+        r = s.recv(9999999)
+        print(r.decode("utf8"))
+        if begin_i > len(str_message):
+            break
 
 ### GETTING PARAMETERS ###
 # File writing method
@@ -64,6 +73,7 @@ nb_files, file_names = traj.trajectoriesToCsv(write_method = write_method, k = k
 new_a = []
 for i in a:
     new_a.append([i])
-sendMessageToUnity(new_a)
+
+sendMessageToUnity(new_a, 1024)
 # Sending file names created
-sendMessageToUnity(file_names)
+sendMessageToUnity(file_names, 1024)
