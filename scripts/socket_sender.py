@@ -64,6 +64,9 @@ a, t = kmean(traj, k = kmeans, method = method, soft = soft, Beta = beta, verbos
 nb_files, file_names = traj.trajectoriesToCsv(write_method = write_method, k = kmeans, a = a)
 
 # Sending assignment array
-sendMessageToUnity(a)
+new_a = []
+for i in a:
+    new_a.append([i])
+sendMessageToUnity(new_a)
 # Sending file names created
 sendMessageToUnity(file_names)
