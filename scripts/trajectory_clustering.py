@@ -147,6 +147,7 @@ class Trajectories:
 
     def trajectoriesToCsv(self, write_method = 0, k = None, a = None):
         nb_files = 0
+        file_names = []
 
         # Handling errors
         if write_method < 0 and write_method > 2:
@@ -174,6 +175,7 @@ class Trajectories:
                     for j in range(len(self.trajectories[i])):
                         writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
                 nb_files += 1
+                file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(nb_files))
         # One file per cluster
         if write_method == 1:
             for i in range(k):
@@ -186,6 +188,7 @@ class Trajectories:
                                 for l in range(len(self.trajectories[j])):
                                     writer.writerow([j, self.trajectories[j][l][0], self.trajectories[j][l][1], self.trajectories[j][l][2]])
                     nb_files += 1
+                    file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(i))
         # One file
         if write_method == 2:
             filename = unity_dir + 'method' + str(write_method) + '.csv'
@@ -195,8 +198,9 @@ class Trajectories:
                 for i in range(len(self.trajectories)):
                     for j in range(len(self.trajectories[i])):
                         writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
+            file_names.append("Datasets/MinTrajectories/method" + str(write_method))
 
-        return nb_files
+        return nb_files, file_names
 
     def getTrajectory(self, id):
         return self.trajectories[id]

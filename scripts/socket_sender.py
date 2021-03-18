@@ -12,40 +12,37 @@ port = int(sys.argv[2])
 print(f"Connecting to {ip_address}, port {port}")
 s.connect((ip_address, port))
 
+### PYTHON TO UNITY FUNCTIONS ###
+# Gets the message from Unity and sends back a message to Unity
+def getMessageFromUnity(message, boolean=False):
+    val = s.recv(999999)
+    if boolean:
+        val = bool(val.decode("utf8"))
+    else:
+        val = int(val.decode("utf8"))
+    message += str(val)
+    s.send(message.encode())
+    return val
+
+# Sends a message to Unity and waits for Unity to send back a message
+def sendMessageToUnity(message):
+    s.send(str(message).encode())
+    r = s.recv(9999999)
+    print(r.decode("utf8"))
+
 ### GETTING PARAMETERS ###
 # File writing method
-write_method = s.recv(9999999)
-write_method = int(write_method.decode("utf8"))
-message = "Python : Writing method " + str(write_method) + " selected"
-s.send(message.encode())
+write_method = getMessageFromUnity("Python : Writing method selected : ")
 # Number of files
-trajLen = s.recv(9999999)
-trajLen = int(trajLen.decode("utf8"))
-message = "Python : counting " + str(trajLen) + " files"
-s.send(message.encode())
+trajLen = getMessageFromUnity("Python : Number of files : ")
 # Number of kmeans
-kmeans = s.recv(9999999)
-kmeans = int(kmeans.decode("utf8"))
-message = "Python : counting " + str(kmeans) + " clusters"
-s.send(message.encode())
+kmeans = getMessageFromUnity("Python : Number of clusters : ")
 # Number of kmean method
-method = s.recv(9999999)
-method = int(method.decode("utf8"))
-message = "Python : method " + str(method) + " selected"
-s.send(message.encode())
+method = getMessageFromUnity("Python : k-mean method selected : ")
 # Number of kmean method
-soft = s.recv(9999999)
-soft = bool(soft.decode("utf8"))
-if soft:
-    message = "Python : Soft k-mean selected"
-else:
-    message = "Python : Regular k-mean selected"
-s.send(message.encode())
+soft = getMessageFromUnity("Python : Using soft k-mean : ", boolean=True)
 # Soft k-mean beta argument
-beta = s.recv(9999999)
-beta = int(beta.decode("utf8"))
-message = "Python : value of argument beta : " + str(beta)
-s.send(message.encode())
+beta = getMessageFromUnity("Python : Soft k-mean beta value : ")
 
 ### LOADING FILES ###
 
@@ -64,8 +61,9 @@ for i in range(trajLen):
 
 traj.attuneTrajectories(0.98, 0)
 a, t = kmean(traj, k = kmeans, method = method, soft = soft, Beta = beta, verbose = False)
-traj.trajectoriesToCsv(write_method = write_method, k = kmeans, a = a)
+nb_files, file_names = traj.trajectoriesToCsv(write_method = write_method, k = kmeans, a = a)
 
-s.send(str(a).encode())
-r = s.recv(9999999)
-print(r.decode("utf8"))
+# Sending assignment array
+sendMessageToUnity(a)
+# Sending file names created
+sendMessageToUnity(file_names)
