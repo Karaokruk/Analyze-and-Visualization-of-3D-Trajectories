@@ -16,10 +16,7 @@ s.connect((ip_address, port))
 # Gets the message from Unity and sends back a message to Unity
 def getMessageFromUnity(message, boolean=False):
     val = s.recv(999999)
-    if boolean:
-        val = bool(val.decode("utf8"))
-    else:
-        val = int(val.decode("utf8"))
+    val = bool(val.decode("utf8")) if boolean else int(val.decode("utf8"))
     message += str(val)
     s.send(message.encode())
     return val

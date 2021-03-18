@@ -90,23 +90,23 @@ class Trajectories:
                             layout = i
                     if verbose:
                         print(f"Before input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id} and trial_id = {trial_id} with layout {layout}")
-                    # If the colomn isn't found
+                    # If the column isn't found
                     if user_id == -1:
-                        user_id = int(input("User ID index not found. Enter the column (index - 1) : "))
+                        user_id = int(input("User ID index not found. Enter the column (index - 1): "))
                     if x == -1:
-                        x = int(input("Camera position X index not found. Enter the column (index - 1) : "))
+                        x = int(input("Camera position X index not found. Enter the column (index - 1): "))
                     if y == -1:
-                        y = int(input("Camera position Y index not found. Enter the column (index - 1) : "))
+                        y = int(input("Camera position Y index not found. Enter the column (index - 1): "))
                     if z == -1:
-                        z = int(input("Camera position Z index not found. Enter the column (index - 1) : "))
+                        z = int(input("Camera position Z index not found. Enter the column (index - 1): "))
                     if state_id == -1:
-                        state_id = int(input("Trial state index not found. Enter the column (index - 1) : "))
+                        state_id = int(input("Trial state index not found. Enter the column (index - 1): "))
                     if trial_id == -1:
-                        trial_id = int(input("Trial ID index not found. Enter the column (index - 1) : "))
+                        trial_id = int(input("Trial ID index not found. Enter the column (index - 1): "))
                     if task_id == -1:
-                        task_id = int(input("Task ID index not found. Enter the column (index - 1) : "))
+                        task_id = int(input("Task ID index not found. Enter the column (index - 1): "))
                     if layout == -1:
-                        layout = int(input("Layout index not found. Enter the column (index - 1) : "))
+                        layout = int(input("Layout index not found. Enter the column (index - 1): "))
                     if verbose:
                         print(f"After input auto-detection : x = {x}, y = {y}, z = {z}, with state_id = {state_id}, task_id = {task_id} and trial_id = {trial_id} with layout {layout}")
                     
@@ -168,10 +168,10 @@ class Trajectories:
         # One file per trajectories
         if write_method == 0:
             for i in range(len(self.trajectories)):
-                filename = unity_dir + 'method' + str(write_method) + 'traj' + str(nb_files) + '.csv'
+                filename = unity_dir + "method" + str(write_method) + "traj" + str(nb_files) + ".csv"
                 with open(filename, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
-                    writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                    writer.writerow(["TrajectoryID", "x", "y", "z"])
                     for j in range(len(self.trajectories[i])):
                         writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
                 nb_files += 1
@@ -179,10 +179,10 @@ class Trajectories:
         # One file per cluster
         if write_method == 1:
             for i in range(k):
-                filename = unity_dir + 'method' + str(write_method) + 'traj' + str(i) + '.csv'
+                filename = unity_dir + "method" + str(write_method) + "traj" + str(i) + ".csv"
                 with open(filename, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
-                    writer.writerow(['TrajectoryID', 'x', 'y', 'z'])
+                    writer.writerow(["TrajectoryID", "x", "y", "z"])
                     for j in range(len(self.trajectories)):
                         if a[j] == i:
                                 for l in range(len(self.trajectories[j])):
@@ -191,7 +191,7 @@ class Trajectories:
                     file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(i))
         # One file
         if write_method == 2:
-            filename = unity_dir + 'method' + str(write_method) + '.csv'
+            filename = unity_dir + "method" + str(write_method) + ".csv"
             with open(filename, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
                 writer.writerow(["TrajectoryID", "x", "y", "z"])
@@ -295,8 +295,8 @@ class Trajectories:
     def showTrajectories(self, clusters = None, verbose = False):
         import matplotlib.pyplot as plt
         nb_dimensions = self.trajectories[0].shape[1]
-        prop_cycle = plt.rcParams['axes.prop_cycle']
-        colors = prop_cycle.by_key()['color']
+        prop_cycle = plt.rcParams["axes.prop_cycle"]
+        colors = prop_cycle.by_key()["color"]
         # 2D visualization
         if nb_dimensions == 2:
             if clusters is not None:
@@ -331,8 +331,8 @@ class Trajectories:
 
         # Initialize the plot object and its color set
         import matplotlib.pyplot as plt
-        prop_cycle = plt.rcParams['axes.prop_cycle']
-        colors = prop_cycle.by_key()['color']
+        prop_cycle = plt.rcParams["axes.prop_cycle"]
+        colors = prop_cycle.by_key()["color"]
 
         # Find the different types of layouts and their number of occurences
         layout_types = list(set(self.layouts)) # erase all duplicates from self.layouts
@@ -380,6 +380,7 @@ class Trajectories:
         self.showTrajectoriesSeparately(clusters = clusters, verbose = True)
 
     ## Different heuristics to compute distance between two trajectories
+
     # Distance between the points p1 and p2
     def pointDistance(self, p1, p2):
         return np.sqrt(np.sum(np.square(p1 - p2)))
