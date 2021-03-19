@@ -102,7 +102,7 @@ def update(kmeans, traj, responsibility):
 # Parameter k is the desired number of clusters.
 # Parameter method : in [0,2]. 0 is for the point by point euclidian distance, same for 1, but their share a common origin, and 2 is the vector by vector distance.
 # Parameter soft : wheter the soft alternative should be used or not.
-def kmean(traj, k = 3, nb_iter = 10, method = 2, soft = True, Beta = 1000, verbose = False):
+def kmean(traj, k = 3, nb_iter = 10, method = 2, soft = True, Beta = 1000, per_layout = True, per_layout_randomization = False, verbose = False):
     if verbose:
         print("\n-- Starting K-mean clustering --\n")
 
@@ -117,7 +117,7 @@ def kmean(traj, k = 3, nb_iter = 10, method = 2, soft = True, Beta = 1000, verbo
     workingTraj.layouts = traj.layouts
 
     # K-mean Initialization
-    m = initializationFromTrajectories(k, workingTraj, per_layout = True, per_layout_randomization = False, verbose = verbose)
+    m = initializationFromTrajectories(k, workingTraj, per_layout = per_layout, per_layout_randomization = per_layout_randomization, verbose = verbose)
     if verbose:
         print("\n-- Initialization done. --\n")
 
