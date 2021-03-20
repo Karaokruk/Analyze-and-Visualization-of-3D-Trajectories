@@ -14,9 +14,9 @@ s.connect((ip_address, port))
 
 ### PYTHON TO UNITY FUNCTIONS ###
 # Gets the message from Unity and sends back a message to Unity
-def getMessageFromUnity(message, boolean=False):
+def getMessageFromUnity(message, boolean=False, floating = False):
     val = s.recv(999999)
-    val = bool(val.decode("utf8")) if boolean else int(val.decode("utf8"))
+    val = (val.decode("utf8") == "True") if boolean else float(val.decode("utf8").replace('f','').replace(',','.')) if floating else int(val.decode("utf8"))
     message += str(val)
     s.send(message.encode())
     return val
@@ -41,6 +41,14 @@ def sendMessageToUnity(message, size):
 write_method = getMessageFromUnity("Python : Writing method selected : ")
 # Number of files
 trajLen = getMessageFromUnity("Python : Number of files : ")
+# Attuning parameters
+limit = getMessageFromUnity("Python : Attuning goal : ")
+ratio = getMessageFromUnity("Python : Attuning ratio : ", floating=True)
+# Number of iterations
+nb_iter = getMessageFromUnity("Python : Number of iterations : ")
+# Type of selection
+per_layout = getMessageFromUnity("Python : Type of selection : ") == 1
+per_layout_randomization = getMessageFromUnity("Python : Per layout randomization : ", boolean=True)
 # Number of kmeans
 kmeans = getMessageFromUnity("Python : Number of clusters : ")
 # Number of kmean method
@@ -48,7 +56,7 @@ method = getMessageFromUnity("Python : k-mean method selected : ")
 # Number of kmean method
 soft = getMessageFromUnity("Python : Using soft k-mean : ", boolean=True)
 # Soft k-mean beta argument
-beta = getMessageFromUnity("Python : Soft k-mean beta value : ")
+beta = getMessageFromUnity("Python : Soft k-mean beta value : ", floating=True)
 
 ### LOADING FILES ###
 
@@ -65,8 +73,8 @@ for i in range(trajLen):
 
 ### K-MEAN CLUSTERING ###
 
-traj.attuneTrajectories(0.98, 0)
-a, t = kmean(traj, k = kmeans, method = method, soft = soft, Beta = beta, verbose = False)
+traj.attuneTrajectories(ratio, limit)
+a, t = kmean(traj, k = kmeans, nb_iter = nb_iter, method = method, soft = soft, Beta = beta, per_layout = per_layout, per_layout_randomization = per_layout_randomization, verbose = False)
 nb_files, file_names = traj.trajectoriesToCsv(write_method = write_method, k = kmeans, a = a)
 
 # Sending assignment array

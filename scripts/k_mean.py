@@ -23,6 +23,7 @@ def initializationFromTrajectories(size, traj, per_layout = False, per_layout_ra
     # Initialization using one random trajectory per layout
     else:
         layout_types = []
+        layout_cpt = []
         # Randomly generate the clusters depending on the layouts
         if per_layout_randomization:
             indexes = list(range(0, len(traj.layouts)))
@@ -31,14 +32,26 @@ def initializationFromTrajectories(size, traj, per_layout = False, per_layout_ra
                 if traj.layouts[i] not in layout_types:
                     kmeans.addTrajectory(traj.trajectories[i])
                     layout_types.append(traj.layouts[i])
+                    layout_cpt.append(1)
                     if verbose:
                         print(f"Layout type : {traj.layouts[i]}")
+                else:
+                    index = layout_types.index(traj.layouts[i])
+                    if layout_cpt[index] < size:
+                        kmeans.addTrajectory(traj.trajectories[i])
+                        layout_cpt[index] += 1
         # Getting the first occurence of each layouts
         else:
             for i in range(len(traj.layouts)):
                 if traj.layouts[i] not in layout_types:
                     kmeans.addTrajectory(traj.trajectories[i])
                     layout_types.append(traj.layouts[i])
+                    layout_cpt.append(1)
+                else:
+                    index = layout_types.index(traj.layouts[i])
+                    if layout_cpt[index] < size:
+                        kmeans.addTrajectory(traj.trajectories[i])
+                        layout_cpt[index] += 1
     return kmeans
 
 # Returns the assigned cluster for each trajectory

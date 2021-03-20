@@ -207,7 +207,8 @@ class Trajectories:
 
     # Make all trajectories the same length
     def attuneTrajectories(self, ratio, limit, verbose = False):
-
+        if ratio < 0 or ratio > 1:
+            ratio = 0.98
         # Method to put away the points that don't change the xyz direction of the trajectory
         def minimizedTrajectory0(trajectory):
             minimized = []
