@@ -174,8 +174,8 @@ class Trajectories:
                     writer.writerow(["TrajectoryID", "x", "y", "z"])
                     for j in range(len(self.trajectories[i])):
                         writer.writerow([i, self.trajectories[i][j][0], self.trajectories[i][j][1], self.trajectories[i][j][2]])
-                nb_files += 1
                 file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(nb_files))
+                nb_files += 1
         # One file per cluster
         if write_method == 1:
             for i in range(k):
@@ -187,8 +187,8 @@ class Trajectories:
                         if a[j] == i:
                                 for l in range(len(self.trajectories[j])):
                                     writer.writerow([j, self.trajectories[j][l][0], self.trajectories[j][l][1], self.trajectories[j][l][2]])
-                    nb_files += 1
                     file_names.append("Datasets/MinTrajectories/method" + str(write_method) + "traj" + str(i))
+                    nb_files += 1
         # One file
         if write_method == 2:
             filename = unity_dir + "method" + str(write_method) + ".csv"
